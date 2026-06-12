@@ -1,0 +1,220 @@
+[0.009s] Invoking command in '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/cyrus/robocon2026/GMK/build/techx_vision_bridge -- -j24 -l24
+[0.072s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.193s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[0.218s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.220s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.226s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.235s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.246s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.271s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.273s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.362s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.406s] -- Found geometry_msgs: 4.9.1 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.415s] -- Found rosidl_default_generators: 1.2.1 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[0.634s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[0.924s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.045s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.073s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[1.103s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.103s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[1.103s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[1.185s] CMake Deprecation Warning at /opt/ros/humble/share/rosidl_cmake/cmake/rosidl_target_interfaces.cmake:32 (message):
+[1.185s]   Use rosidl_get_typesupport_target() and target_link_libraries() instead of
+[1.185s]   rosidl_target_interfaces()
+[1.185s] Call Stack (most recent call first):
+[1.185s]   CMakeLists.txt:41 (rosidl_target_interfaces)
+[1.185s] 
+[1.185s] 
+[1.186s] -- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.200s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.201s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.201s] -- Configured cppcheck include dirs: /home/cyrus/robocon2026/GMK/src/techx_vision_bridge/include
+[1.201s] -- Configured cppcheck exclude dirs and/or files: 
+[1.202s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[1.202s] -- Configured cpplint exclude dirs and/or files: 
+[1.202s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.202s] -- Added test 'lint_cmake' to check CMake code style
+[1.203s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[1.203s] -- Added test 'uncrustify' to check C / C++ code style
+[1.203s] -- Configured uncrustify additional arguments: 
+[1.204s] -- Added test 'xmllint' to check XML markup files
+[1.206s] -- Configuring done
+[1.248s] -- Generating done
+[1.257s] -- Build files have been written to: /home/cyrus/robocon2026/GMK/build/techx_vision_bridge
+[1.280s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_generator_c
+[1.286s] [  2%] Built target techx_vision_bridge__rs
+[1.288s] [  5%] Built target techx_vision_bridge__cpp
+[1.290s] [ 14%] Built target techx_vision_bridge__rosidl_generator_c
+[1.296s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_fastrtps_cpp
+[1.297s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_c
+[1.297s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_introspection_c
+[1.298s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_cpp
+[1.300s] [ 14%] Built target ament_cmake_python_copy_techx_vision_bridge
+[1.300s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_introspection_cpp
+[1.301s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_fastrtps_c
+[1.309s] [ 29%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_cpp
+[1.309s] [ 32%] Built target techx_vision_bridge__rosidl_typesupport_introspection_cpp
+[1.311s] [ 44%] Built target techx_vision_bridge__rosidl_typesupport_cpp
+[1.311s] [ 50%] Built target techx_vision_bridge__rosidl_typesupport_c
+[1.311s] [ 58%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_c
+[1.312s] [ 67%] Built target techx_vision_bridge__rosidl_typesupport_introspection_c
+[1.323s] [ 67%] Built target techx_vision_bridge
+[1.334s] Consolidate compiler generated dependencies of target vision_bridge_node
+[1.338s] [ 70%] Built target techx_vision_bridge__py
+[1.346s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_generator_py
+[1.349s] [ 73%] Building CXX object CMakeFiles/vision_bridge_node.dir/src/vision_bridge_node.cpp.o
+[1.355s] [ 79%] Built target techx_vision_bridge__rosidl_generator_py
+[1.362s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_introspection_c__pyext
+[1.364s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_c__pyext
+[1.364s] Consolidate compiler generated dependencies of target techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext
+[1.370s] [ 85%] Built target techx_vision_bridge__rosidl_typesupport_introspection_c__pyext
+[1.372s] [ 91%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext
+[1.373s] [ 97%] Built target techx_vision_bridge__rosidl_typesupport_c__pyext
+[1.433s] running egg_info
+[1.434s] writing techx_vision_bridge.egg-info/PKG-INFO
+[1.434s] writing dependency_links to techx_vision_bridge.egg-info/dependency_links.txt
+[1.434s] writing top-level names to techx_vision_bridge.egg-info/top_level.txt
+[1.436s] reading manifest file 'techx_vision_bridge.egg-info/SOURCES.txt'
+[1.436s] writing manifest file 'techx_vision_bridge.egg-info/SOURCES.txt'
+[1.454s] [ 97%] Built target ament_cmake_python_build_techx_vision_bridge_egg
+[3.961s] [100%] Linking CXX executable vision_bridge_node
+[4.151s] [100%] Built target vision_bridge_node
+[4.160s] Invoked command in '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/cyrus/robocon2026/GMK/build/techx_vision_bridge -- -j24 -l24
+[4.174s] Invoking command in '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/cyrus/robocon2026/GMK/build/techx_vision_bridge
+[4.181s] -- Install configuration: ""
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/rosidl_interfaces/techx_vision_bridge
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/target3_d.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_generator_c__visibility_control.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__struct.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__functions.c
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__functions.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/library_path.sh
+[4.181s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/library_path.dsv
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_c.so
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_fastrtps_c.h
+[4.181s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_c.so
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_generator_cpp__visibility_control.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/target3_d.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__struct.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__traits.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__builder.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/dds_fastrtps
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_fastrtps_cpp.hpp
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_cpp.so
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.c
+[4.182s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_introspection_c.h
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_c.so
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_c.so
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.cpp
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_introspection_cpp.hpp
+[4.183s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_cpp.so
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_cpp.so
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/pythonpath.sh
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/pythonpath.dsv
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/dependency_links.txt
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/PKG-INFO
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/SOURCES.txt
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/top_level.txt
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_c.c
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/libtechx_vision_bridge__rosidl_generator_py.so
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_fastrtps_c.c
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_introspection_c.c
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[4.184s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/__init__.py
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/_target3_d_s.c
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/_target3_d.py
+[4.184s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/__init__.py
+[4.205s] Listing '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge'...
+[4.205s] Compiling '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/__init__.py'...
+[4.205s] Listing '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg'...
+[4.208s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[4.208s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[4.208s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[4.208s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_py.so
+[4.208s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/rust_packages/techx_vision_bridge
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/build.rs
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/Cargo.toml
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/lib.rs
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg.rs
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg/rmw.rs
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.idl
+[4.209s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.msg
+[4.209s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/techx_vision_bridge/vision_bridge_node
+[4.210s] -- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/techx_vision_bridge/vision_bridge_node" to ""
+[4.210s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg
+[4.210s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.msg
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/config
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/config/vision_bridge.yaml
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/launch
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/launch/vision_bridge.launch.py
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/package_run_dependencies/techx_vision_bridge
+[4.210s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/parent_prefix_path/techx_vision_bridge
+[4.210s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/ament_prefix_path.sh
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/ament_prefix_path.dsv
+[4.210s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/path.sh
+[4.210s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/path.dsv
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.bash
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.sh
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.zsh
+[4.211s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.dsv
+[4.211s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/package.dsv
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/packages/techx_vision_bridge
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cExport-noconfig.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cppExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cppExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cExport.cmake
+[4.211s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cExport-noconfig.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cppExport.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cppExport.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cppExport-noconfig.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_pyExport.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_pyExport-noconfig.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_dependencies-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_include_directories-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_libraries-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_targets-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridgeConfig.cmake
+[4.212s] -- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridgeConfig-version.cmake
+[4.212s] -- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/package.xml
+[4.213s] Invoked command in '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/cyrus/robocon2026/GMK/build/techx_vision_bridge

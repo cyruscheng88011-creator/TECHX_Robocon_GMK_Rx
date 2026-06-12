@@ -1,0 +1,339 @@
+[0.000000] (-) TimerEvent: {}
+[0.000394] (techx_vision_bridge) JobQueued: {'identifier': 'techx_vision_bridge', 'dependencies': OrderedDict()}
+[0.000465] (techx_vision_bridge) JobStarted: {'identifier': 'techx_vision_bridge'}
+[0.006381] (techx_vision_bridge) JobProgress: {'identifier': 'techx_vision_bridge', 'progress': 'cmake'}
+[0.006809] (techx_vision_bridge) Command: {'cmd': ['/usr/bin/cmake', '/home/cyrus/robocon2026/GMK/src/techx_vision_bridge', '-DCMAKE_INSTALL_PREFIX=/home/cyrus/robocon2026/GMK/install/techx_vision_bridge'], 'cwd': '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('HTTPS_PROXY', 'http://127.0.0.1:7897/'), ('no_proxy', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('LANGUAGE', 'zh_CN:zh'), ('USER', 'cyrus'), ('all_proxy', 'socks://127.0.0.1:7897/'), ('XDG_SESSION_TYPE', 'x11'), ('STM32CubeMX_PATH', '/home/cyrus/STM32CubeMX'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/cyrus'), ('OLDPWD', '/home/cyrus'), ('DESKTOP_SESSION', 'ubuntu'), ('NO_PROXY', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('NVM_BIN', '/home/cyrus/.nvm/versions/node/v22.22.2/bin'), ('NVM_INC', '/home/cyrus/.nvm/versions/node/v22.22.2/include/node'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2252'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('NVM_DIR', '/home/cyrus/.nvm'), ('MANDATORY_PATH', '/usr/share/gconf/ubuntu.mandatory.path'), ('https_proxy', 'http://127.0.0.1:7897/'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'cyrus'), ('ALL_PROXY', 'socks://127.0.0.1:7897/'), ('http_proxy', 'http://127.0.0.1:7897/'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('DEFAULTS_PATH', '/usr/share/gconf/ubuntu.default.path'), ('USERNAME', 'cyrus'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/cyrus/tools/riscv-openocd/bin:/home/cyrus/Mujoco/mujoco/mujoco-3.3.2/bin:/home/cyrus/.nvm/versions/node/v22.22.2/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/cyrus-RTX4070:@/tmp/.ICE-unix/2007,unix/cyrus-RTX4070:/tmp/.ICE-unix/2007'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/8da46469_5074_4d37_8400_fba6daf32a54'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.140'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('NVM_CD_FLAGS', ''), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('HTTP_PROXY', 'http://127.0.0.1:7897/'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[0.099947] (-) TimerEvent: {}
+[0.200523] (-) TimerEvent: {}
+[0.237147] (techx_vision_bridge) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.300676] (-) TimerEvent: {}
+[0.367691] (techx_vision_bridge) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.374836] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.400783] (-) TimerEvent: {}
+[0.462404] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.467568] (techx_vision_bridge) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.467957] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.469116] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.473706] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.500901] (-) TimerEvent: {}
+[0.566662] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.571494] (techx_vision_bridge) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.571647] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.571893] (techx_vision_bridge) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.579588] (techx_vision_bridge) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.600992] (-) TimerEvent: {}
+[0.697734] (techx_vision_bridge) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[0.701058] (-) TimerEvent: {}
+[0.770108] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[0.801179] (-) TimerEvent: {}
+[0.821015] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.824924] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.831523] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.844074] (techx_vision_bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.857374] (techx_vision_bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.890339] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.892742] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.901246] (-) TimerEvent: {}
+[1.001561] (-) TimerEvent: {}
+[1.005170] (techx_vision_bridge) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[1.036681] (techx_vision_bridge) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[1.079754] (techx_vision_bridge) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[1.092394] (techx_vision_bridge) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[1.101621] (-) TimerEvent: {}
+[1.201859] (-) TimerEvent: {}
+[1.205463] (techx_vision_bridge) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[1.206116] (techx_vision_bridge) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[1.301976] (-) TimerEvent: {}
+[1.308016] (techx_vision_bridge) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[1.310185] (techx_vision_bridge) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[1.365608] (techx_vision_bridge) StdoutLine: {'line': b'-- Found geometry_msgs: 4.9.1 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[1.373900] (techx_vision_bridge) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.2.1 (/opt/ros/humble/share/rosidl_default_generators/cmake)\n'}
+[1.402075] (-) TimerEvent: {}
+[1.502272] (-) TimerEvent: {}
+[1.602528] (-) TimerEvent: {}
+[1.602771] (techx_vision_bridge) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)\n'}
+[1.702604] (-) TimerEvent: {}
+[1.802798] (-) TimerEvent: {}
+[1.873619] (techx_vision_bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.902904] (-) TimerEvent: {}
+[1.976265] (techx_vision_bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.997059] (techx_vision_bridge) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") \n'}
+[1.998340] (techx_vision_bridge) StdoutLine: {'line': b'-- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)\n'}
+[2.002978] (-) TimerEvent: {}
+[2.018433] (techx_vision_bridge) StdoutLine: {'line': b'-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") \n'}
+[2.018576] (techx_vision_bridge) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[2.018615] (techx_vision_bridge) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10\n'}
+[2.018645] (techx_vision_bridge) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so\n'}
+[2.033875] (techx_vision_bridge) StdoutLine: {'line': b'-- Found PythonExtra: .so  \n'}
+[2.103090] (-) TimerEvent: {}
+[2.128094] (techx_vision_bridge) StderrLine: {'line': b'\x1b[0mCMake Deprecation Warning at /opt/ros/humble/share/rosidl_cmake/cmake/rosidl_target_interfaces.cmake:32 (message):\n'}
+[2.128237] (techx_vision_bridge) StderrLine: {'line': b'  Use rosidl_get_typesupport_target() and target_link_libraries() instead of\n'}
+[2.128280] (techx_vision_bridge) StderrLine: {'line': b'  rosidl_target_interfaces()\n'}
+[2.128312] (techx_vision_bridge) StderrLine: {'line': b'Call Stack (most recent call first):\n'}
+[2.128344] (techx_vision_bridge) StderrLine: {'line': b'  CMakeLists.txt:41 (rosidl_target_interfaces)\n'}
+[2.128378] (techx_vision_bridge) StderrLine: {'line': b'\n'}
+[2.128411] (techx_vision_bridge) StderrLine: {'line': b'\x1b[0m\n'}
+[2.130861] (techx_vision_bridge) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[2.152102] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[2.152670] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[2.153031] (techx_vision_bridge) StdoutLine: {'line': b'-- Configured cppcheck include dirs: /home/cyrus/robocon2026/GMK/src/techx_vision_bridge/include\n'}
+[2.153108] (techx_vision_bridge) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[2.153538] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'cpplint' to check C / C++ code against the Google style\n"}
+[2.153609] (techx_vision_bridge) StdoutLine: {'line': b'-- Configured cpplint exclude dirs and/or files: \n'}
+[2.154057] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[2.154557] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[2.154629] (techx_vision_bridge) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[2.154861] (techx_vision_bridge) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[2.156250] (techx_vision_bridge) StdoutLine: {'line': b'-- Configuring done\n'}
+[2.175503] (techx_vision_bridge) StdoutLine: {'line': b'-- Generating done\n'}
+[2.182372] (techx_vision_bridge) StdoutLine: {'line': b'-- Build files have been written to: /home/cyrus/robocon2026/GMK/build/techx_vision_bridge\n'}
+[2.189754] (techx_vision_bridge) CommandEnded: {'returncode': 0}
+[2.190285] (techx_vision_bridge) JobProgress: {'identifier': 'techx_vision_bridge', 'progress': 'build'}
+[2.190967] (techx_vision_bridge) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge', '--', '-j24', '-l24'], 'cwd': '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('HTTPS_PROXY', 'http://127.0.0.1:7897/'), ('no_proxy', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('LANGUAGE', 'zh_CN:zh'), ('USER', 'cyrus'), ('all_proxy', 'socks://127.0.0.1:7897/'), ('XDG_SESSION_TYPE', 'x11'), ('STM32CubeMX_PATH', '/home/cyrus/STM32CubeMX'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/cyrus'), ('OLDPWD', '/home/cyrus'), ('DESKTOP_SESSION', 'ubuntu'), ('NO_PROXY', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('NVM_BIN', '/home/cyrus/.nvm/versions/node/v22.22.2/bin'), ('NVM_INC', '/home/cyrus/.nvm/versions/node/v22.22.2/include/node'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2252'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('NVM_DIR', '/home/cyrus/.nvm'), ('MANDATORY_PATH', '/usr/share/gconf/ubuntu.mandatory.path'), ('https_proxy', 'http://127.0.0.1:7897/'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'cyrus'), ('ALL_PROXY', 'socks://127.0.0.1:7897/'), ('http_proxy', 'http://127.0.0.1:7897/'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('DEFAULTS_PATH', '/usr/share/gconf/ubuntu.default.path'), ('USERNAME', 'cyrus'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/cyrus/tools/riscv-openocd/bin:/home/cyrus/Mujoco/mujoco/mujoco-3.3.2/bin:/home/cyrus/.nvm/versions/node/v22.22.2/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/cyrus-RTX4070:@/tmp/.ICE-unix/2007,unix/cyrus-RTX4070:/tmp/.ICE-unix/2007'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/8da46469_5074_4d37_8400_fba6daf32a54'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.140'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('NVM_CD_FLAGS', ''), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('HTTP_PROXY', 'http://127.0.0.1:7897/'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[2.203190] (-) TimerEvent: {}
+[2.222377] (techx_vision_bridge) StdoutLine: {'line': b'[  2%] \x1b[34m\x1b[1mGenerating C code for ROS interfaces\x1b[0m\n'}
+[2.231897] (techx_vision_bridge) StdoutLine: {'line': b'[  5%] \x1b[34m\x1b[1mGenerating Rust code for ROS interfaces\x1b[0m\n'}
+[2.232989] (techx_vision_bridge) StdoutLine: {'line': b'[  8%] \x1b[34m\x1b[1mGenerating C++ code for ROS interfaces\x1b[0m\n'}
+[2.240332] (techx_vision_bridge) StdoutLine: {'line': b'[  8%] Built target ament_cmake_python_copy_techx_vision_bridge\n'}
+[2.303266] (-) TimerEvent: {}
+[2.388599] (techx_vision_bridge) StdoutLine: {'line': b'running egg_info\n'}
+[2.389034] (techx_vision_bridge) StdoutLine: {'line': b'creating techx_vision_bridge.egg-info\n'}
+[2.389113] (techx_vision_bridge) StdoutLine: {'line': b'writing techx_vision_bridge.egg-info/PKG-INFO\n'}
+[2.389152] (techx_vision_bridge) StdoutLine: {'line': b'writing dependency_links to techx_vision_bridge.egg-info/dependency_links.txt\n'}
+[2.389209] (techx_vision_bridge) StdoutLine: {'line': b'writing top-level names to techx_vision_bridge.egg-info/top_level.txt\n'}
+[2.389245] (techx_vision_bridge) StdoutLine: {'line': b"writing manifest file 'techx_vision_bridge.egg-info/SOURCES.txt'\n"}
+[2.391049] (techx_vision_bridge) StdoutLine: {'line': b"reading manifest file 'techx_vision_bridge.egg-info/SOURCES.txt'\n"}
+[2.391312] (techx_vision_bridge) StdoutLine: {'line': b"writing manifest file 'techx_vision_bridge.egg-info/SOURCES.txt'\n"}
+[2.403458] (-) TimerEvent: {}
+[2.418124] (techx_vision_bridge) StdoutLine: {'line': b'[  8%] Built target techx_vision_bridge__rs\n'}
+[2.419635] (techx_vision_bridge) StdoutLine: {'line': b'[  8%] Built target ament_cmake_python_build_techx_vision_bridge_egg\n'}
+[2.421375] (techx_vision_bridge) StdoutLine: {'line': b'[  8%] Built target techx_vision_bridge__cpp\n'}
+[2.424649] (techx_vision_bridge) StdoutLine: {'line': b'[ 11%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_generator_c.dir/rosidl_generator_c/techx_vision_bridge/msg/detail/target3_d__functions.c.o\x1b[0m\n'}
+[2.429631] (techx_vision_bridge) StdoutLine: {'line': b'[ 14%] \x1b[34m\x1b[1mGenerating C++ type support dispatch for ROS interfaces\x1b[0m\n'}
+[2.430756] (techx_vision_bridge) StdoutLine: {'line': b'[ 20%] \x1b[34m\x1b[1mGenerating C++ introspection for ROS interfaces\x1b[0m\n'}
+[2.430855] (techx_vision_bridge) StdoutLine: {'line': b'[ 20%] \x1b[34m\x1b[1mGenerating C++ type support for eProsima Fast-RTPS\x1b[0m\n'}
+[2.470721] (techx_vision_bridge) StdoutLine: {'line': b'[ 23%] \x1b[32m\x1b[1mLinking C shared library libtechx_vision_bridge__rosidl_generator_c.so\x1b[0m\n'}
+[2.503529] (-) TimerEvent: {}
+[2.503737] (techx_vision_bridge) StdoutLine: {'line': b'[ 23%] Built target techx_vision_bridge__rosidl_generator_c\n'}
+[2.510684] (techx_vision_bridge) StdoutLine: {'line': b'[ 26%] \x1b[34m\x1b[1mGenerating C type support for eProsima Fast-RTPS\x1b[0m\n'}
+[2.511657] (techx_vision_bridge) StdoutLine: {'line': b'[ 29%] \x1b[34m\x1b[1mGenerating C type support dispatch for ROS interfaces\x1b[0m\n'}
+[2.512984] (techx_vision_bridge) StdoutLine: {'line': b'[ 32%] \x1b[34m\x1b[1mGenerating C introspection for ROS interfaces\x1b[0m\n'}
+[2.603588] (-) TimerEvent: {}
+[2.622372] (techx_vision_bridge) StdoutLine: {'line': b'[ 35%] \x1b[32mBuilding CXX object CMakeFiles/techx_vision_bridge__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/techx_vision_bridge/msg/target3_d__type_support.cpp.o\x1b[0m\n'}
+[2.639194] (techx_vision_bridge) StdoutLine: {'line': b'[ 38%] \x1b[32mBuilding CXX object CMakeFiles/techx_vision_bridge__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/techx_vision_bridge/msg/detail/target3_d__type_support.cpp.o\x1b[0m\n'}
+[2.655644] (techx_vision_bridge) StdoutLine: {'line': b'[ 41%] \x1b[32mBuilding CXX object CMakeFiles/techx_vision_bridge__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/techx_vision_bridge/msg/detail/dds_fastrtps/target3_d__type_support.cpp.o\x1b[0m\n'}
+[2.703699] (-) TimerEvent: {}
+[2.721310] (techx_vision_bridge) StdoutLine: {'line': b'[ 44%] \x1b[32mBuilding CXX object CMakeFiles/techx_vision_bridge__rosidl_typesupport_c.dir/rosidl_typesupport_c/techx_vision_bridge/msg/target3_d__type_support.cpp.o\x1b[0m\n'}
+[2.731802] (techx_vision_bridge) StdoutLine: {'line': b'[ 47%] \x1b[32mBuilding CXX object CMakeFiles/techx_vision_bridge__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/techx_vision_bridge/msg/detail/target3_d__type_support_c.cpp.o\x1b[0m\n'}
+[2.742577] (techx_vision_bridge) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/techx_vision_bridge/msg/detail/target3_d__type_support.c.o\x1b[0m\n'}
+[2.752079] (techx_vision_bridge) StdoutLine: {'line': b'[ 52%] \x1b[32m\x1b[1mLinking CXX shared library libtechx_vision_bridge__rosidl_typesupport_c.so\x1b[0m\n'}
+[2.767942] (techx_vision_bridge) StdoutLine: {'line': b'[ 55%] \x1b[32m\x1b[1mLinking C shared library libtechx_vision_bridge__rosidl_typesupport_introspection_c.so\x1b[0m\n'}
+[2.787974] (techx_vision_bridge) StdoutLine: {'line': b'[ 55%] Built target techx_vision_bridge__rosidl_typesupport_c\n'}
+[2.798529] (techx_vision_bridge) StdoutLine: {'line': b'[ 55%] Built target techx_vision_bridge__rosidl_typesupport_introspection_c\n'}
+[2.803782] (-) TimerEvent: {}
+[2.825144] (techx_vision_bridge) StdoutLine: {'line': b'[ 58%] \x1b[32m\x1b[1mLinking CXX shared library libtechx_vision_bridge__rosidl_typesupport_cpp.so\x1b[0m\n'}
+[2.859556] (techx_vision_bridge) StdoutLine: {'line': b'[ 58%] Built target techx_vision_bridge__rosidl_typesupport_cpp\n'}
+[2.903893] (-) TimerEvent: {}
+[2.911457] (techx_vision_bridge) StdoutLine: {'line': b'[ 61%] \x1b[32m\x1b[1mLinking CXX shared library libtechx_vision_bridge__rosidl_typesupport_fastrtps_cpp.so\x1b[0m\n'}
+[2.912167] (techx_vision_bridge) StdoutLine: {'line': b'[ 64%] \x1b[32m\x1b[1mLinking CXX shared library libtechx_vision_bridge__rosidl_typesupport_introspection_cpp.so\x1b[0m\n'}
+[2.934161] (techx_vision_bridge) StdoutLine: {'line': b'[ 67%] \x1b[32m\x1b[1mLinking CXX shared library libtechx_vision_bridge__rosidl_typesupport_fastrtps_c.so\x1b[0m\n'}
+[2.961315] (techx_vision_bridge) StdoutLine: {'line': b'[ 67%] Built target techx_vision_bridge__rosidl_typesupport_introspection_cpp\n'}
+[2.961640] (techx_vision_bridge) StdoutLine: {'line': b'[ 67%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_cpp\n'}
+[2.984199] (techx_vision_bridge) StdoutLine: {'line': b'[ 67%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_c\n'}
+[3.004025] (-) TimerEvent: {}
+[3.004799] (techx_vision_bridge) StdoutLine: {'line': b'[ 67%] Built target techx_vision_bridge\n'}
+[3.036369] (techx_vision_bridge) StdoutLine: {'line': b'[ 70%] \x1b[34m\x1b[1mGenerating Python code for ROS interfaces\x1b[0m\n'}
+[3.037226] (techx_vision_bridge) StdoutLine: {'line': b'[ 73%] \x1b[32mBuilding CXX object CMakeFiles/vision_bridge_node.dir/src/vision_bridge_node.cpp.o\x1b[0m\n'}
+[3.104145] (-) TimerEvent: {}
+[3.204415] (-) TimerEvent: {}
+[3.273534] (techx_vision_bridge) StdoutLine: {'line': b'[ 73%] Built target techx_vision_bridge__py\n'}
+[3.288319] (techx_vision_bridge) StdoutLine: {'line': b'[ 76%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_generator_py.dir/rosidl_generator_py/techx_vision_bridge/msg/_target3_d_s.c.o\x1b[0m\n'}
+[3.304533] (-) TimerEvent: {}
+[3.373859] (techx_vision_bridge) StdoutLine: {'line': b'[ 79%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/techx_vision_bridge/libtechx_vision_bridge__rosidl_generator_py.so\x1b[0m\n'}
+[3.404623] (-) TimerEvent: {}
+[3.405645] (techx_vision_bridge) StdoutLine: {'line': b'[ 79%] Built target techx_vision_bridge__rosidl_generator_py\n'}
+[3.419852] (techx_vision_bridge) StdoutLine: {'line': b'[ 82%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_introspection_c.c.o\x1b[0m\n'}
+[3.422262] (techx_vision_bridge) StdoutLine: {'line': b'[ 85%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_fastrtps_c.c.o\x1b[0m\n'}
+[3.423089] (techx_vision_bridge) StdoutLine: {'line': b'[ 88%] \x1b[32mBuilding C object CMakeFiles/techx_vision_bridge__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_c.c.o\x1b[0m\n'}
+[3.483262] (techx_vision_bridge) StdoutLine: {'line': b'[ 91%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[3.484855] (techx_vision_bridge) StdoutLine: {'line': b'[ 94%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[3.484947] (techx_vision_bridge) StdoutLine: {'line': b'[ 97%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[3.504708] (-) TimerEvent: {}
+[3.512486] (techx_vision_bridge) StdoutLine: {'line': b'[ 97%] Built target techx_vision_bridge__rosidl_typesupport_c__pyext\n'}
+[3.521053] (techx_vision_bridge) StdoutLine: {'line': b'[ 97%] Built target techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext\n'}
+[3.521121] (techx_vision_bridge) StdoutLine: {'line': b'[ 97%] Built target techx_vision_bridge__rosidl_typesupport_introspection_c__pyext\n'}
+[3.604814] (-) TimerEvent: {}
+[3.705043] (-) TimerEvent: {}
+[3.805276] (-) TimerEvent: {}
+[3.905604] (-) TimerEvent: {}
+[4.005913] (-) TimerEvent: {}
+[4.106214] (-) TimerEvent: {}
+[4.206468] (-) TimerEvent: {}
+[4.306688] (-) TimerEvent: {}
+[4.406932] (-) TimerEvent: {}
+[4.507170] (-) TimerEvent: {}
+[4.607485] (-) TimerEvent: {}
+[4.707696] (-) TimerEvent: {}
+[4.807926] (-) TimerEvent: {}
+[4.908135] (-) TimerEvent: {}
+[5.008432] (-) TimerEvent: {}
+[5.108644] (-) TimerEvent: {}
+[5.208876] (-) TimerEvent: {}
+[5.309170] (-) TimerEvent: {}
+[5.409474] (-) TimerEvent: {}
+[5.509804] (-) TimerEvent: {}
+[5.534481] (techx_vision_bridge) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable vision_bridge_node\x1b[0m\n'}
+[5.609891] (-) TimerEvent: {}
+[5.677040] (techx_vision_bridge) StdoutLine: {'line': b'[100%] Built target vision_bridge_node\n'}
+[5.686354] (techx_vision_bridge) CommandEnded: {'returncode': 0}
+[5.686764] (techx_vision_bridge) JobProgress: {'identifier': 'techx_vision_bridge', 'progress': 'install'}
+[5.695524] (techx_vision_bridge) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge'], 'cwd': '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('HTTPS_PROXY', 'http://127.0.0.1:7897/'), ('no_proxy', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('LANGUAGE', 'zh_CN:zh'), ('USER', 'cyrus'), ('all_proxy', 'socks://127.0.0.1:7897/'), ('XDG_SESSION_TYPE', 'x11'), ('STM32CubeMX_PATH', '/home/cyrus/STM32CubeMX'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/cyrus'), ('OLDPWD', '/home/cyrus'), ('DESKTOP_SESSION', 'ubuntu'), ('NO_PROXY', 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1'), ('NVM_BIN', '/home/cyrus/.nvm/versions/node/v22.22.2/bin'), ('NVM_INC', '/home/cyrus/.nvm/versions/node/v22.22.2/include/node'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2252'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('NVM_DIR', '/home/cyrus/.nvm'), ('MANDATORY_PATH', '/usr/share/gconf/ubuntu.mandatory.path'), ('https_proxy', 'http://127.0.0.1:7897/'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'cyrus'), ('ALL_PROXY', 'socks://127.0.0.1:7897/'), ('http_proxy', 'http://127.0.0.1:7897/'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('DEFAULTS_PATH', '/usr/share/gconf/ubuntu.default.path'), ('USERNAME', 'cyrus'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/cyrus/tools/riscv-openocd/bin:/home/cyrus/Mujoco/mujoco/mujoco-3.3.2/bin:/home/cyrus/.nvm/versions/node/v22.22.2/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/cyrus-RTX4070:@/tmp/.ICE-unix/2007,unix/cyrus-RTX4070:/tmp/.ICE-unix/2007'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/8da46469_5074_4d37_8400_fba6daf32a54'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.140'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/cyrus/robocon2026/GMK/build/techx_vision_bridge'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('NVM_CD_FLAGS', ''), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('HTTP_PROXY', 'http://127.0.0.1:7897/'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[5.705365] (techx_vision_bridge) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[5.705615] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/rosidl_interfaces/techx_vision_bridge\n'}
+[5.705820] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.705919] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.706007] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/target3_d.h\n'}
+[5.706105] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_generator_c__visibility_control.h\n'}
+[5.706164] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.706245] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__struct.h\n'}
+[5.706334] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__functions.c\n'}
+[5.706395] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.h\n'}
+[5.706485] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__functions.h\n'}
+[5.706564] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/library_path.sh\n'}
+[5.706647] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/library_path.dsv\n'}
+[5.706833] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_c.so\n'}
+[5.707070] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_c.so" to ""\n'}
+[5.707148] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.707229] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.707325] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.707381] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_fastrtps_c.h\n'}
+[5.707444] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[5.707520] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_c.so\n'}
+[5.707652] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_c.so" to ""\n'}
+[5.707715] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.707789] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.707839] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_generator_cpp__visibility_control.hpp\n'}
+[5.707905] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/target3_d.hpp\n'}
+[5.707992] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.708039] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__struct.hpp\n'}
+[5.708087] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.hpp\n'}
+[5.708151] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__traits.hpp\n'}
+[5.708217] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__builder.hpp\n'}
+[5.708291] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.708351] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.708432] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.708481] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/dds_fastrtps\n'}
+[5.708529] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[5.708575] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[5.708640] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_cpp.so\n'}
+[5.708710] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_fastrtps_cpp.so" to ""\n'}
+[5.708777] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.708843] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.708911] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[5.709034] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.709172] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.c\n'}
+[5.709224] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_introspection_c.h\n'}
+[5.709270] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_c.so\n'}
+[5.709343] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_c.so" to ""\n'}
+[5.709388] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_c.so\n'}
+[5.709462] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_c.so" to ""\n'}
+[5.709587] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge\n'}
+[5.709635] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg\n'}
+[5.709713] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail\n'}
+[5.709758] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__type_support.cpp\n'}
+[5.709813] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/include/techx_vision_bridge/techx_vision_bridge/msg/detail/target3_d__rosidl_typesupport_introspection_cpp.hpp\n'}
+[5.709851] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_cpp.so\n'}
+[5.709890] (-) TimerEvent: {}
+[5.709982] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_introspection_cpp.so" to ""\n'}
+[5.710034] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_cpp.so\n'}
+[5.710167] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_typesupport_cpp.so" to ""\n'}
+[5.710228] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/pythonpath.sh\n'}
+[5.710288] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/pythonpath.dsv\n'}
+[5.710347] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info\n'}
+[5.710438] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[5.710492] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/PKG-INFO\n'}
+[5.710538] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[5.710585] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge-2.0.0-py3.10.egg-info/top_level.txt\n'}
+[5.710645] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge\n'}
+[5.710693] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_c.c\n'}
+[5.710739] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.710804] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/libtechx_vision_bridge__rosidl_generator_py.so\n'}
+[5.710860] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[5.710908] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/_techx_vision_bridge_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[5.710958] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.711014] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/__init__.py\n'}
+[5.711061] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.711111] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg\n'}
+[5.711157] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/_target3_d_s.c\n'}
+[5.711204] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/_target3_d.py\n'}
+[5.711253] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/__init__.py\n'}
+[5.743462] (techx_vision_bridge) StdoutLine: {'line': b"Listing '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge'...\n"}
+[5.743548] (techx_vision_bridge) StdoutLine: {'line': b"Compiling '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/__init__.py'...\n"}
+[5.743577] (techx_vision_bridge) StdoutLine: {'line': b"Listing '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg'...\n"}
+[5.743603] (techx_vision_bridge) StdoutLine: {'line': b"Compiling '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/__init__.py'...\n"}
+[5.743631] (techx_vision_bridge) StdoutLine: {'line': b"Compiling '/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/msg/_target3_d.py'...\n"}
+[5.746335] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.746415] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so" to ""\n'}
+[5.746587] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.746739] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so" to ""\n'}
+[5.746830] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[5.746951] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/local/lib/python3.10/dist-packages/techx_vision_bridge/techx_vision_bridge_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so" to ""\n'}
+[5.746992] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_py.so\n'}
+[5.747107] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/libtechx_vision_bridge__rosidl_generator_py.so" to ""\n'}
+[5.747158] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/rust_packages/techx_vision_bridge\n'}
+[5.747200] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust\n'}
+[5.747237] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/build.rs\n'}
+[5.747273] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/Cargo.toml\n'}
+[5.747310] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src\n'}
+[5.747346] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/lib.rs\n'}
+[5.747384] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg.rs\n'}
+[5.747431] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg\n'}
+[5.747459] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/rust/src/msg/rmw.rs\n'}
+[5.747495] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.idl\n'}
+[5.747532] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.msg\n'}
+[5.747599] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/techx_vision_bridge/vision_bridge_node\n'}
+[5.748133] (techx_vision_bridge) StdoutLine: {'line': b'-- Set runtime path of "/home/cyrus/robocon2026/GMK/install/techx_vision_bridge/lib/techx_vision_bridge/vision_bridge_node" to ""\n'}
+[5.748191] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg\n'}
+[5.748217] (techx_vision_bridge) StdoutLine: {'line': b'-- Up-to-date: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/msg/Target3D.msg\n'}
+[5.748255] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/package_run_dependencies/techx_vision_bridge\n'}
+[5.748281] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/parent_prefix_path/techx_vision_bridge\n'}
+[5.748319] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/ament_prefix_path.sh\n'}
+[5.748357] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/ament_prefix_path.dsv\n'}
+[5.748393] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/path.sh\n'}
+[5.748435] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/environment/path.dsv\n'}
+[5.748476] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.bash\n'}
+[5.748514] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.sh\n'}
+[5.748549] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.zsh\n'}
+[5.748593] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/local_setup.dsv\n'}
+[5.748632] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/package.dsv\n'}
+[5.748691] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/ament_index/resource_index/packages/techx_vision_bridge\n'}
+[5.748757] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cExport.cmake\n'}
+[5.748812] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cExport-noconfig.cmake\n'}
+[5.748861] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[5.748907] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[5.748961] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_cppExport.cmake\n'}
+[5.749012] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[5.749060] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[5.749110] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cExport.cmake\n'}
+[5.749157] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[5.749208] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cExport.cmake\n'}
+[5.749258] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[5.749308] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[5.749354] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[5.749403] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cppExport.cmake\n'}
+[5.749452] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridge__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[5.749502] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_pyExport.cmake\n'}
+[5.749547] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/export_techx_vision_bridge__rosidl_generator_pyExport-noconfig.cmake\n'}
+[5.749594] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake-extras.cmake\n'}
+[5.749638] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[5.749685] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[5.749729] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[5.749778] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[5.749824] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[5.749876] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[5.749922] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridgeConfig.cmake\n'}
+[5.749957] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/cmake/techx_vision_bridgeConfig-version.cmake\n'}
+[5.750001] (techx_vision_bridge) StdoutLine: {'line': b'-- Installing: /home/cyrus/robocon2026/GMK/install/techx_vision_bridge/share/techx_vision_bridge/package.xml\n'}
+[5.751576] (techx_vision_bridge) CommandEnded: {'returncode': 0}
+[5.767044] (techx_vision_bridge) JobEnded: {'identifier': 'techx_vision_bridge', 'rc': 0}
+[5.767577] (-) EventReactorShutdown: {}

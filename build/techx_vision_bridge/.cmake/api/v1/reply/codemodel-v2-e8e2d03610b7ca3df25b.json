@@ -1,0 +1,267 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-f288bec3ab6efab1ffee.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						17,
+						18,
+						19
+					]
+				},
+				{
+					"build" : "techx_vision_bridge__py",
+					"jsonFile" : "directory-techx_vision_bridge__py-5dfef0561dcf6f461d8f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/cyrus/robocon2026/GMK/build/techx_vision_bridge/techx_vision_bridge__py",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "techx_vision_bridge__rs",
+					"jsonFile" : "directory-techx_vision_bridge__rs-a5470aa3ea4c5066cc6f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/cyrus/robocon2026/GMK/build/techx_vision_bridge/techx_vision_bridge__rs",
+					"targetIndexes" : 
+					[
+						16
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2
+					],
+					"name" : "techx_vision_bridge",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_build_techx_vision_bridge_egg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_build_techx_vision_bridge_egg-111ce7ed2f2c22a12e86.json",
+					"name" : "ament_cmake_python_build_techx_vision_bridge_egg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_copy_techx_vision_bridge::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_copy_techx_vision_bridge-6b99a804a538f032eff0.json",
+					"name" : "ament_cmake_python_copy_techx_vision_bridge",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge-66f47f3fa20879d72c4d.json",
+					"name" : "techx_vision_bridge",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__cpp-1b1fa62a4a3ea2fee640.json",
+					"name" : "techx_vision_bridge__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "techx_vision_bridge__py::@b30b702718a614c680d7",
+					"jsonFile" : "target-techx_vision_bridge__py-d00e2ed2551e6e020d0b.json",
+					"name" : "techx_vision_bridge__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_generator_c-d44831d427efa9e26766.json",
+					"name" : "techx_vision_bridge__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_generator_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_generator_py-4048eb54405778e5131c.json",
+					"name" : "techx_vision_bridge__rosidl_generator_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_c-3f5cbd1e256f50f076f6.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_c__pyext-24d35fca370bb38cd021.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_cpp-8fb5043808d1344fd753.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_fastrtps_c-75034d2071f58132d52e.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext-231e4e94f4358df5a928.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_fastrtps_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_fastrtps_cpp-bf37b35353f88b717bc9.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_introspection_c-166cc8eb37847212f36b.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_introspection_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_introspection_c__pyext-bedf3907548c0710994c.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_introspection_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge__rosidl_typesupport_introspection_cpp-f6809040d5d05ba2505f.json",
+					"name" : "techx_vision_bridge__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "techx_vision_bridge__rs::@463ceecf28a04e24a264",
+					"jsonFile" : "target-techx_vision_bridge__rs-afaa357a72ad9449c9c2.json",
+					"name" : "techx_vision_bridge__rs",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "techx_vision_bridge_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-techx_vision_bridge_uninstall-c8676a0f13e047577353.json",
+					"name" : "techx_vision_bridge_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-4b8d3170a39d1e1ba849.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "vision_bridge_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-vision_bridge_node-a394542e8f0f352cee20.json",
+					"name" : "vision_bridge_node",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/cyrus/robocon2026/GMK/build/techx_vision_bridge",
+		"source" : "/home/cyrus/robocon2026/GMK/src/techx_vision_bridge"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}
