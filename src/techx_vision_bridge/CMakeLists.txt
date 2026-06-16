@@ -68,6 +68,7 @@ install(TARGETS
 
 install(PROGRAMS
   tools/mock_jetson_sender.py
+  tools/check_vision_bridge_config.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
