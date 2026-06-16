@@ -18,61 +18,59 @@ src/techx_vision_bridge
 Jetson vision UDP V2
         │
         ▼
-techx_vision_bridge
+vision_bridge_node
         │
         ├── /techx/vision/frame       主话题，一帧完整结果
         ├── /techx/vision/objects     单目标调试流
         ├── /techx/vision/kfs_targets 旧详细单目标兼容
         └── /techx/vision/targets     旧 XYZ 兼容
+
+/techx/vision/frame + /techx/vision/request
+        │
+        ▼
+vision_selector_node
+        │
+        └── /techx/vision/selected    按决策请求筛出的当前最优目标
 ```
 
-本包只做 UDP 接收、校验、目标语义映射、坐标变换和 ROS 2 发布。它不做导航、不做决策、不直接控制下位机。其他包只订阅话题，不需要解析 UDP。
+本包只做 UDP 接收、校验、目标语义映射、坐标变换、ROS 2 发布和可选目标筛选。它不做导航、不做机械臂规划、不直接控制下位机。
 
 ---
 
-## 2. 比赛流程与目标语义
+## 2. 比赛 class_id 全局分配
 
-当前流程建议按任务阶段处理：
+`class_id` 是全局语义编号，不是模型内部类别编号。Jetson 必须用 `class_id_map` 或 `class_id_offset` 把模型本地类别映射成下表；GMK 和决策包只认下表。
 
-```text
-1. Head 获取阶段
-   Jetson 识别 Head，GMK 转到 arm1_base，机械臂1使用。
+### 武器头，机械臂1使用
 
-2. Head 与 R1 对接阶段
-   可以识别 QR 或后续自定义对接 marker，用于水平对准或拼接确认。
+| class_id | class_name | 中文含义 | zone_id | target_type | 推荐坐标系 |
+|---:|---|---|---:|---:|---|
+| 100 | `weapon_head_fist` | 拳头 | 1 | 1 | arm1_base |
+| 101 | `weapon_head_palm` | 掌 | 1 | 1 | arm1_base |
+| 102 | `weapon_head_spear` | 矛头 | 1 | 1 | arm1_base |
 
-3. KFS 阶段
-   识别 R2 真 KFS，GMK 转到 arm2_base，机械臂2使用。
+保留 `103~149` 给后续武器头或对接特征。
 
-4. QR 对齐/靠近阶段
-   识别 R1 QR，用 align_err_x/y 对齐，用 robot_base/control_z 控制靠近距离。
-```
+### KFS，机械臂2使用
 
-默认目标映射：
+| class_id | class_name | color | 中文含义 | zone_id | target_type | 推荐坐标系 |
+|---:|---|---:|---|---:|---:|---|
+| 0 | `kfs_red_r1` | 1 | 红方 R1 KFS | 2 | 2 | arm2_base |
+| 1 | `kfs_red_r2_fake` | 1 | 红方 R2 假 KFS | 2 | 2 | arm2_base |
+| 2 | `kfs_red_r2_true` | 1 | 红方 R2 真 KFS | 2 | 2 | arm2_base |
+| 3 | `kfs_blue_r1` | 2 | 蓝方 R1 KFS | 2 | 2 | arm2_base |
+| 4 | `kfs_blue_r2_fake` | 2 | 蓝方 R2 假 KFS | 2 | 2 | arm2_base |
+| 5 | `kfs_blue_r2_true` | 2 | 蓝方 R2 真 KFS | 2 | 2 | arm2_base |
 
-| 目标 | `class_id` | `zone_id` | `target_type` | 推荐坐标系 |
-|---|---|---:|---:|---|
-| KFS | `0~4` | `2` | `2` | `arm2_base` |
-| Head | `100~149` | `1` | `1` | `arm1_base` |
-| QR | `200` | `3` | `3` | `robot_base` |
+梅花林阶段一般应筛 `class_id=2` 或 `class_id=5`，不要只筛 `target_type=2`，否则会把 R1、R2 假、R2 真都混在一起。
 
-KFS 默认类别：
+### QR，机器人本体使用
 
-```text
-0 fake_kfs
-1 r1_kfs_red
-2 r1_kfs_blue
-3 r2_kfs_red
-4 r2_kfs_blue
-```
+| class_id | class_name | 中文含义 | zone_id | target_type | 推荐坐标系 |
+|---:|---|---|---:|---:|---|
+| 200 | `qr_code` | 二维码 | 3 | 3 | robot_base |
 
-颜色定义：
-
-```text
-0 unknown
-1 red
-2 blue
-```
+当前 V2 只传二维码中心、置信度、距离和坐标，不传二维码字符串内容。如果后续要读取二维码内容或任务编号，需要 V3/TLV 或额外字段。
 
 ---
 
@@ -86,7 +84,7 @@ robot_base
   机器人本体坐标系。底盘移动、QR 对齐和靠近主要使用它。
 
 arm1_base
-  机械臂1基座坐标系。Head 获取/对接建议使用它。
+  机械臂1基座坐标系。武器头获取/对接建议使用它。
 
 arm2_base
   机械臂2基座坐标系。KFS 操作建议使用它。
@@ -140,16 +138,6 @@ bool has_target
 techx_vision_bridge/VisionObject[] targets
 ```
 
-语义：
-
-```text
-has_target=false, target_count=0
-  Jetson 和 bridge 在线，但当前帧没有 fresh 目标。
-
-has_target=true, target_count>0
-  targets[] 中包含本帧所有目标。
-```
-
 每个 `VisionObject` 同时包含：
 
 ```text
@@ -179,7 +167,7 @@ arm2_base：valid_arm2_xyz / arm2_x / arm2_y / arm2_z
 
 ## 5. 可扩展目标映射
 
-GMK 目标语义不再写死在 C++ 里，而是由 `config/vision_bridge.yaml` 的 `class_rules` 配置。
+GMK 目标语义不写死在 C++ 里，而是由 `config/vision_bridge.yaml` 的 `class_rules` 配置。
 
 规则格式：
 
@@ -187,21 +175,12 @@ GMK 目标语义不再写死在 C++ 里，而是由 `config/vision_bridge.yaml` 
 "class_or_range:zone_id:target_type:control_frame:priority_bias"
 ```
 
-`control_frame` 取值：
-
-```text
-1 camera_link
-2 robot_base
-3 arm1_base
-4 arm2_base
-```
-
 默认配置：
 
 ```yaml
 class_rules:
-  - "0-4:2:2:4:0.0"       # KFS  -> arm2_base
-  - "100-149:1:1:3:0.0"   # Head -> arm1_base
+  - "0-5:2:2:4:0.0"       # KFS  -> arm2_base
+  - "100-102:1:1:3:0.0"   # Head -> arm1_base
   - "200:3:3:2:0.0"       # QR   -> robot_base
 ```
 
@@ -209,13 +188,13 @@ class_rules:
 
 ```yaml
 class_rules:
-  - "0-4:2:2:4:0.0"
-  - "100-149:1:1:3:0.0"
+  - "0-5:2:2:4:0.0"
+  - "100-102:1:1:3:0.0"
   - "200:3:3:2:0.0"
   - "150-159:10:10:2:0.0"
 ```
 
-这样 GMK 不需要改 C++，其他包继续订阅 `/techx/vision/frame`，只需要按新的 `target_type` 或 `class_id` 筛选。
+这样 GMK 不需要改 C++，其他包继续订阅 `/techx/vision/frame` 或使用 `/request + /selected`。
 
 ---
 
@@ -277,7 +256,41 @@ accept_legacy: false
 
 ---
 
-## 7. 编译和启动
+## 7. request / selected 辅助接口
+
+`/techx/vision/frame` 是主数据源。`/techx/vision/request` 和 `/techx/vision/selected` 只是筛选辅助层，不会改变 Jetson 检测模式。
+
+决策包发布：
+
+```text
+/techx/vision/request  techx_vision_bridge/msg/VisionRequest
+```
+
+selector 输出：
+
+```text
+/techx/vision/selected techx_vision_bridge/msg/VisionSelection
+```
+
+典型请求：
+
+```text
+Head 获取：target_type=1, zone_id=1, use_class_id=true, class_id=100/101/102
+KFS 选择：target_type=2, zone_id=2, use_class_id=true, class_id=2/5
+QR 对齐：target_type=3, zone_id=3, use_class_id=true, class_id=200
+```
+
+控制前必须检查：
+
+```text
+selection.status == STATUS_OK
+selection.has_match == true
+selection.target.valid_control_xyz == true   # 需要三维控制时
+```
+
+---
+
+## 8. 编译和启动
 
 把源码包放到目标工作空间：
 
@@ -312,11 +325,14 @@ YAML 顶层必须是节点名：
 ```yaml
 vision_bridge_node:
   ros__parameters:
+
+vision_selector_node:
+  ros__parameters:
 ```
 
 ---
 
-## 8. 模拟 Jetson 数据流
+## 9. 模拟 Jetson 数据流
 
 启动 bridge：
 
@@ -336,21 +352,9 @@ ros2 topic echo /techx/vision/frame
 ros2 run techx_vision_bridge mock_jetson_sender.py --mode mixed --ip 127.0.0.1
 ```
 
-支持模式：
-
-| mode | 说明 |
-|---|---|
-| `empty` | V2 `count=0`，无目标状态 |
-| `kfs` | 两个 KFS 目标 |
-| `head` | 一个 Head 目标 |
-| `qr` | 一个 QR 目标 |
-| `invalid-depth` | QR 目标但 `z=0` |
-| `mixed` | Head + KFS + QR 同帧 |
-| `legacy` | 旧 29 字节包，仅用于兼容测试 |
-
 ---
 
-## 9. 其他包如何订阅
+## 10. 其他包如何订阅
 
 ### package.xml
 
@@ -387,11 +391,11 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 
     for (const auto &obj : msg->targets) {
       if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_KFS) {
-        // KFS 阶段：按 class_id / color / priority 选择目标，使用 control_x/y/z
+        // KFS 阶段：必须再按 class_id 选择 2 或 5，使用 control_x/y/z
       } else if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_QR) {
         // QR 阶段：先用 align_err_x/y 对齐，再用 control_z 靠近
       } else if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_WEAPON_HEAD) {
-        // Head 阶段：使用 arm1/control 坐标
+        // Head 阶段：必须再按 class_id 选择 100/101/102，使用 arm1/control 坐标
       }
     }
   }
@@ -400,16 +404,14 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 
 ---
 
-## 10. 决策包数据选择逻辑
-
-决策包不需要向 Jetson 请求某一个目标。Jetson 每帧主动下发所有目标，GMK 发布完整 `VisionFrame`。决策包根据当前任务阶段筛选：
+## 11. 决策包数据选择逻辑
 
 | 阶段 | 过滤条件 | 使用数据 |
 |---|---|---|
-| Head 获取 | `target_type=TYPE_WEAPON_HEAD` | `control_x/y/z`，应为 arm1_base |
-| Head/R1 对接 | QR 或自定义 marker | `align_err_x/y`、`control_z` |
-| KFS 梅花林 | `target_type=TYPE_KFS`，再筛 R2 真 KFS | `control_x/y/z`，应为 arm2_base |
-| QR 对齐靠近 | `target_type=TYPE_QR` | `align_err_x/y`、`control_z`，应为 robot_base |
+| Head 获取 | `target_type=1` 且 `class_id=100/101/102` | `control_x/y/z`，应为 arm1_base |
+| Head/R1 对接 | `class_id=200` 或后续自定义 marker | `align_err_x/y`、`control_z` |
+| KFS 梅花林 | `target_type=2` 且 `class_id=2/5` | `control_x/y/z`，应为 arm2_base |
+| QR 对齐靠近 | `class_id=200` | `align_err_x/y`、`control_z`，应为 robot_base |
 
 多目标选择推荐顺序：
 
@@ -426,7 +428,7 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 
 ---
 
-## 11. 当前边界
+## 12. 当前边界
 
 当前 V2 不携带二维码字符串内容，也不携带目标姿态。
 
@@ -438,14 +440,17 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 
 ---
 
-## 12. 常见问题
+## 13. 常见问题
 
 ### 参数没生效
 
-检查 YAML 顶层是不是：
+检查 YAML 顶层是不是节点名：
 
 ```yaml
 vision_bridge_node:
+  ros__parameters:
+
+vision_selector_node:
   ros__parameters:
 ```
 
