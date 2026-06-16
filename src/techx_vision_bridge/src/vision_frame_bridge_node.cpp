@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -21,6 +22,8 @@
 #include "techx_vision_bridge/msg/target3_d.hpp"
 #include "techx_vision_bridge/msg/vision_frame.hpp"
 #include "techx_vision_bridge/msg/vision_object.hpp"
+#include "techx_vision_bridge/msg/vision_request.hpp"
+#include "techx_vision_bridge/msg/vision_selection.hpp"
 #include "techx_vision_bridge/msg/vision_target.hpp"
 
 namespace {
@@ -28,6 +31,7 @@ constexpr uint16_t MAGIC_LEGACY = 0x55AA;
 constexpr uint16_t MAGIC_V2 = 0x55AB;
 constexpr uint8_t VERSION_V2 = 2;
 constexpr size_t MAX_TARGETS = 16;
+constexpr uint8_t INVALID_INDEX = 255;
 
 constexpr uint8_t ZONE_UNKNOWN = 0;
 constexpr uint8_t ZONE_HEAD = 1;
@@ -181,6 +185,10 @@ bool finite3(float x, float y, float z) {
   return std::isfinite(x) && std::isfinite(y) && std::isfinite(z);
 }
 
+float finite_or_zero(float v) {
+  return std::isfinite(v) ? v : 0.0f;
+}
+
 Transform make_transform_from_xyz_rpy(const std::vector<double> &p) {
   Transform tf{};
   if (p.size() != 6) {
@@ -295,11 +303,14 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter("object_topic_name", "/techx/vision/objects");
     declare_parameter("detail_topic_name", "/techx/vision/kfs_targets");
     declare_parameter("topic_name", "/techx/vision/targets");
+    declare_parameter("request_topic_name", "/techx/vision/request");
+    declare_parameter("selected_topic_name", "/techx/vision/selected");
     declare_parameter("publish_frame_topic", true);
     declare_parameter("publish_object_topic", true);
     declare_parameter("publish_detail_topic", false);
     declare_parameter("publish_legacy_topic", false);
     declare_parameter("accept_legacy", false);
+    declare_parameter("enable_request_selector", true);
     declare_parameter("reliable_qos", true);
     declare_parameter("qos_depth", 5);
     declare_parameter("image_width", 640.0);
@@ -314,6 +325,9 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter<std::vector<double>>("T_arm1_robot_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     declare_parameter<std::vector<double>>("T_arm2_robot_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     declare_parameter("watchdog_timeout_sec", 0.3);
+    declare_parameter("request_timeout_sec", 0.0);
+    declare_parameter("default_max_frame_age_sec", 0.20);
+    declare_parameter("publish_period_ms", 50);
 
     bind_addr_ = get_parameter("udp_bind_addr").as_string();
     udp_port_ = get_parameter("udp_port").as_int();
@@ -322,6 +336,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     publish_detail_ = get_parameter("publish_detail_topic").as_bool();
     publish_legacy_ = get_parameter("publish_legacy_topic").as_bool();
     accept_legacy_ = get_parameter("accept_legacy").as_bool();
+    enable_request_selector_ = get_parameter("enable_request_selector").as_bool();
     image_width_ = get_parameter("image_width").as_double();
     image_height_ = get_parameter("image_height").as_double();
     class_rules_ = parse_rules(get_parameter("class_rules").as_string_array());
@@ -330,6 +345,8 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     tf_arm1_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm1_robot_xyz_rpy").as_double_array());
     tf_arm2_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm2_robot_xyz_rpy").as_double_array());
     watchdog_timeout_sec_ = get_parameter("watchdog_timeout_sec").as_double();
+    request_timeout_sec_ = get_parameter("request_timeout_sec").as_double();
+    default_max_frame_age_sec_ = get_parameter("default_max_frame_age_sec").as_double();
 
     const bool reliable = get_parameter("reliable_qos").as_bool();
     const int depth = std::max(1, static_cast<int>(get_parameter("qos_depth").as_int()));
@@ -346,13 +363,23 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     detail_pub_ = create_publisher<techx_vision_bridge::msg::VisionTarget>(get_parameter("detail_topic_name").as_string(), qos);
     legacy_pub_ = create_publisher<techx_vision_bridge::msg::Target3D>(get_parameter("topic_name").as_string(), qos);
 
+    if (enable_request_selector_) {
+      selected_pub_ = create_publisher<techx_vision_bridge::msg::VisionSelection>(get_parameter("selected_topic_name").as_string(), qos);
+      request_sub_ = create_subscription<techx_vision_bridge::msg::VisionRequest>(
+          get_parameter("request_topic_name").as_string(), qos,
+          std::bind(&VisionFrameBridgeNode::on_request, this, std::placeholders::_1));
+      const int period_ms = std::max(10, static_cast<int>(get_parameter("publish_period_ms").as_int()));
+      selector_timer_ = create_wall_timer(std::chrono::milliseconds(period_ms), std::bind(&VisionFrameBridgeNode::publish_selection, this));
+    }
+
     open_socket();
     recv_timer_ = create_wall_timer(std::chrono::milliseconds(2), std::bind(&VisionFrameBridgeNode::recv_once, this));
     watchdog_timer_ = create_wall_timer(std::chrono::milliseconds(200), std::bind(&VisionFrameBridgeNode::watchdog, this));
     last_valid_ = std::chrono::steady_clock::now();
-    RCLCPP_INFO(get_logger(), "vision bridge ready udp=%s:%d accept_legacy=%s transforms=%s qos=%s rules=%zu",
+    RCLCPP_INFO(get_logger(), "vision bridge ready udp=%s:%d accept_legacy=%s transforms=%s selector=%s qos=%s rules=%zu",
                 bind_addr_.c_str(), udp_port_, accept_legacy_ ? "true" : "false",
-                enable_transforms_ ? "true" : "false", reliable ? "reliable" : "best_effort", class_rules_.size());
+                enable_transforms_ ? "true" : "false", enable_request_selector_ ? "true" : "false",
+                reliable ? "reliable" : "best_effort", class_rules_.size());
   }
 
   ~VisionFrameBridgeNode() override {
@@ -548,68 +575,73 @@ class VisionFrameBridgeNode : public rclcpp::Node {
       t.align_err_y = static_cast<float>((static_cast<double>(t.v) - cy) / cy);
     }
 
-    fill_transformed_coordinates(t);
+    if (enable_transforms_ && t.valid_xyz) {
+      const Vec3 camera{t.x, t.y, t.z};
+      const Vec3 robot = apply_transform(tf_robot_camera_, camera);
+      t.valid_robot_xyz = true;
+      t.robot_x = static_cast<float>(robot.x);
+      t.robot_y = static_cast<float>(robot.y);
+      t.robot_z = static_cast<float>(robot.z);
 
-    float score = std::isfinite(t.confidence) ? t.confidence : 0.0f;
-    score += t.priority_bias;
-    score -= 0.15f * std::fabs(t.align_err_x);
-    score -= 0.10f * std::fabs(t.align_err_y);
-    if (t.valid_control_xyz) score += 0.05f * std::max(0.0f, 2.0f - t.control_z);
-    t.priority = score;
+      const Vec3 arm1 = apply_transform(tf_arm1_robot_, robot);
+      t.valid_arm1_xyz = true;
+      t.arm1_x = static_cast<float>(arm1.x);
+      t.arm1_y = static_cast<float>(arm1.y);
+      t.arm1_z = static_cast<float>(arm1.z);
+
+      const Vec3 arm2 = apply_transform(tf_arm2_robot_, robot);
+      t.valid_arm2_xyz = true;
+      t.arm2_x = static_cast<float>(arm2.x);
+      t.arm2_y = static_cast<float>(arm2.y);
+      t.arm2_z = static_cast<float>(arm2.z);
+    }
+
+    copy_frame_coordinates(t);
+    t.priority = t.confidence + t.priority_bias - 0.2f * (std::abs(t.align_err_x) + std::abs(t.align_err_y));
   }
 
-  void fill_transformed_coordinates(DecodedTarget &t) const {
-    if (!t.valid_xyz) {
-      return;
+  void copy_frame_coordinates(DecodedTarget &t) {
+    t.valid_control_xyz = false;
+    t.control_x = 0.0f;
+    t.control_y = 0.0f;
+    t.control_z = 0.0f;
+
+    switch (t.control_frame) {
+      case FRAME_ROBOT_BASE:
+        t.valid_control_xyz = t.valid_robot_xyz;
+        t.control_x = t.robot_x;
+        t.control_y = t.robot_y;
+        t.control_z = t.robot_z;
+        break;
+      case FRAME_ARM1_BASE:
+        t.valid_control_xyz = t.valid_arm1_xyz;
+        t.control_x = t.arm1_x;
+        t.control_y = t.arm1_y;
+        t.control_z = t.arm1_z;
+        break;
+      case FRAME_ARM2_BASE:
+        t.valid_control_xyz = t.valid_arm2_xyz;
+        t.control_x = t.arm2_x;
+        t.control_y = t.arm2_y;
+        t.control_z = t.arm2_z;
+        break;
+      case FRAME_CAMERA_LINK:
+      default:
+        t.valid_control_xyz = t.valid_xyz;
+        t.control_x = t.x;
+        t.control_y = t.y;
+        t.control_z = t.z;
+        break;
     }
-
-    const Vec3 camera{t.x, t.y, t.z};
-    if (!enable_transforms_) {
-      t.control_frame = FRAME_CAMERA_LINK;
-      t.valid_control_xyz = true;
-      t.control_x = static_cast<float>(camera.x);
-      t.control_y = static_cast<float>(camera.y);
-      t.control_z = static_cast<float>(camera.z);
-      return;
-    }
-
-    const Vec3 robot = apply_transform(tf_robot_camera_, camera);
-    const Vec3 arm1 = apply_transform(tf_arm1_robot_, robot);
-    const Vec3 arm2 = apply_transform(tf_arm2_robot_, robot);
-
-    t.valid_robot_xyz = true;
-    t.robot_x = static_cast<float>(robot.x);
-    t.robot_y = static_cast<float>(robot.y);
-    t.robot_z = static_cast<float>(robot.z);
-
-    t.valid_arm1_xyz = true;
-    t.arm1_x = static_cast<float>(arm1.x);
-    t.arm1_y = static_cast<float>(arm1.y);
-    t.arm1_z = static_cast<float>(arm1.z);
-
-    t.valid_arm2_xyz = true;
-    t.arm2_x = static_cast<float>(arm2.x);
-    t.arm2_y = static_cast<float>(arm2.y);
-    t.arm2_z = static_cast<float>(arm2.z);
-
-    Vec3 control = camera;
-    if (t.control_frame == FRAME_ROBOT_BASE) {
-      control = robot;
-    } else if (t.control_frame == FRAME_ARM1_BASE) {
-      control = arm1;
-    } else if (t.control_frame == FRAME_ARM2_BASE) {
-      control = arm2;
-    }
-
-    t.valid_control_xyz = true;
-    t.control_x = static_cast<float>(control.x);
-    t.control_y = static_cast<float>(control.y);
-    t.control_z = static_cast<float>(control.z);
   }
 
   rclcpp::Time stamp(const DecodedFrame &frame) const {
-    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(frame.recv_time.time_since_epoch()).count();
-    return rclcpp::Time(ns);
+    if (frame.timestamp > 0.0) {
+      const auto sec = static_cast<int64_t>(frame.timestamp);
+      const auto nsec = static_cast<uint32_t>((frame.timestamp - static_cast<double>(sec)) * 1e9);
+      return rclcpp::Time(sec, nsec, RCL_ROS_TIME);
+    }
+    return now();
   }
 
   techx_vision_bridge::msg::VisionObject to_object(const DecodedFrame &frame, const DecodedTarget &t, uint8_t index) {
@@ -619,11 +651,13 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     msg.seq = frame.seq;
     msg.target_index = index;
     msg.target_count = static_cast<uint8_t>(frame.targets.size());
+
     msg.zone_id = t.zone_id;
     msg.target_type = t.target_type;
     msg.class_id = t.class_id;
     msg.color = t.color;
     msg.confidence = t.confidence;
+
     msg.u = t.u;
     msg.v = t.v;
 
@@ -660,28 +694,33 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   }
 
   void publish(const DecodedFrame &frame) {
-    std::vector<techx_vision_bridge::msg::VisionObject> objects;
-    objects.reserve(frame.targets.size());
+    techx_vision_bridge::msg::VisionFrame frame_msg;
+    frame_msg.header.stamp = stamp(frame);
+    frame_msg.header.frame_id = "camera_link";
+    frame_msg.seq = frame.seq;
+    frame_msg.protocol_version = frame.protocol_version;
+    frame_msg.upstream_timestamp = frame.timestamp;
+    frame_msg.target_count = static_cast<uint8_t>(frame.targets.size());
+    frame_msg.has_target = !frame.targets.empty();
+    frame_msg.targets.reserve(frame.targets.size());
+
     for (size_t i = 0; i < frame.targets.size(); ++i) {
       auto obj = to_object(frame, frame.targets[i], static_cast<uint8_t>(i));
-      objects.push_back(obj);
+      frame_msg.targets.push_back(obj);
       if (publish_object_) object_pub_->publish(obj);
       if (publish_detail_) publish_detail(frame, &frame.targets[i]);
       if (publish_legacy_ && frame.targets[i].valid_xyz) publish_xyz(frame, frame.targets[i]);
     }
     if (frame.targets.empty() && publish_detail_) publish_detail(frame, nullptr);
+
+    latest_frame_ = frame_msg;
+    latest_frame_time_ = std::chrono::steady_clock::now();
+    has_frame_ = true;
+
     if (publish_frame_) {
-      techx_vision_bridge::msg::VisionFrame msg;
-      msg.header.stamp = stamp(frame);
-      msg.header.frame_id = "camera_link";
-      msg.seq = frame.seq;
-      msg.protocol_version = frame.protocol_version;
-      msg.upstream_timestamp = frame.timestamp;
-      msg.target_count = static_cast<uint8_t>(frame.targets.size());
-      msg.has_target = !frame.targets.empty();
-      msg.targets = std::move(objects);
-      frame_pub_->publish(msg);
+      frame_pub_->publish(frame_msg);
     }
+    publish_selection();
   }
 
   void publish_detail(const DecodedFrame &frame, const DecodedTarget *t) {
@@ -718,6 +757,105 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     legacy_pub_->publish(msg);
   }
 
+  void on_request(const techx_vision_bridge::msg::VisionRequest::SharedPtr msg) {
+    latest_request_ = *msg;
+    request_recv_time_ = std::chrono::steady_clock::now();
+    has_request_ = true;
+    publish_selection();
+  }
+
+  bool request_expired() const {
+    if (!has_request_ || request_timeout_sec_ <= 0.0) return false;
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() - request_recv_time_).count() > request_timeout_sec_;
+  }
+
+  float frame_age_sec() const {
+    if (!has_frame_) return 0.0f;
+    return static_cast<float>(std::chrono::duration<double>(std::chrono::steady_clock::now() - latest_frame_time_).count());
+  }
+
+  bool matches_request(const techx_vision_bridge::msg::VisionObject &obj) const {
+    if (!has_request_) return false;
+    if (latest_request_.target_type != techx_vision_bridge::msg::VisionRequest::TYPE_ANY && obj.target_type != latest_request_.target_type) return false;
+    if (latest_request_.zone_id != techx_vision_bridge::msg::VisionRequest::ZONE_ANY && obj.zone_id != latest_request_.zone_id) return false;
+    if (latest_request_.use_class_id && obj.class_id != latest_request_.class_id) return false;
+    if (latest_request_.use_color && obj.color != latest_request_.color) return false;
+    if (latest_request_.require_control_xyz && !obj.valid_control_xyz) return false;
+    if (latest_request_.min_confidence > 0.0f && obj.confidence < latest_request_.min_confidence) return false;
+    return true;
+  }
+
+  bool select_best(size_t &best_index, float &best_score) const {
+    best_index = 0;
+    best_score = -std::numeric_limits<float>::infinity();
+    bool found = false;
+    for (size_t i = 0; i < latest_frame_.targets.size(); ++i) {
+      const auto &obj = latest_frame_.targets[i];
+      if (!matches_request(obj)) continue;
+      float score = finite_or_zero(obj.priority);
+      if (obj.valid_control_xyz) score += 0.02f;
+      if (score > best_score) {
+        best_index = i;
+        best_score = score;
+        found = true;
+      }
+    }
+    return found;
+  }
+
+  techx_vision_bridge::msg::VisionSelection base_selection(uint8_t status) {
+    techx_vision_bridge::msg::VisionSelection out;
+    out.header.stamp = now();
+    out.header.frame_id = "camera_link";
+    out.frame_seq = has_frame_ ? latest_frame_.seq : 0;
+    out.request_seq = has_request_ ? latest_request_.request_seq : 0;
+    out.has_request = has_request_;
+    out.has_match = false;
+    out.status = status;
+    out.selected_index = INVALID_INDEX;
+    out.frame_age_sec = frame_age_sec();
+    out.score = 0.0f;
+    return out;
+  }
+
+  void publish_selection() {
+    if (!enable_request_selector_ || !selected_pub_) {
+      return;
+    }
+    if (!has_request_) {
+      return;
+    }
+    if (request_expired()) {
+      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_REQUEST_STALE));
+      has_request_ = false;
+      return;
+    }
+    if (!has_frame_) {
+      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_NO_FRAME));
+      return;
+    }
+
+    const float max_age = latest_request_.max_frame_age_sec > 0.0f ? latest_request_.max_frame_age_sec : static_cast<float>(default_max_frame_age_sec_);
+    if (max_age > 0.0f && frame_age_sec() > max_age) {
+      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_FRAME_STALE));
+      return;
+    }
+
+    size_t best_index = 0;
+    float best_score = 0.0f;
+    if (!select_best(best_index, best_score)) {
+      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_NO_MATCH));
+      return;
+    }
+
+    auto out = base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_OK);
+    out.has_match = true;
+    out.selected_index = static_cast<uint8_t>(std::min<size_t>(best_index, INVALID_INDEX - 1));
+    out.score = best_score;
+    out.target = latest_frame_.targets[best_index];
+    selected_pub_->publish(out);
+  }
+
   void watchdog() {
     double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - last_valid_).count();
     if (elapsed > watchdog_timeout_sec_) {
@@ -733,6 +871,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   bool publish_detail_{false};
   bool publish_legacy_{false};
   bool accept_legacy_{false};
+  bool enable_request_selector_{true};
   double image_width_{640.0};
   double image_height_{480.0};
   std::vector<ClassRule> class_rules_{default_rules()};
@@ -741,18 +880,32 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   Transform tf_arm1_robot_{};
   Transform tf_arm2_robot_{};
   double watchdog_timeout_sec_{0.3};
+  double request_timeout_sec_{0.0};
+  double default_max_frame_age_sec_{0.20};
+
   bool v2_seq_init_{false};
   bool legacy_seq_init_{false};
   bool v2_seen_{false};
   uint32_t last_v2_seq_{0};
   uint32_t last_legacy_seq_{0};
   std::chrono::steady_clock::time_point last_valid_;
+  std::chrono::steady_clock::time_point latest_frame_time_;
+  std::chrono::steady_clock::time_point request_recv_time_;
+
+  bool has_frame_{false};
+  bool has_request_{false};
+  techx_vision_bridge::msg::VisionFrame latest_frame_;
+  techx_vision_bridge::msg::VisionRequest latest_request_;
+
   rclcpp::Publisher<techx_vision_bridge::msg::VisionFrame>::SharedPtr frame_pub_;
   rclcpp::Publisher<techx_vision_bridge::msg::VisionObject>::SharedPtr object_pub_;
   rclcpp::Publisher<techx_vision_bridge::msg::VisionTarget>::SharedPtr detail_pub_;
   rclcpp::Publisher<techx_vision_bridge::msg::Target3D>::SharedPtr legacy_pub_;
+  rclcpp::Publisher<techx_vision_bridge::msg::VisionSelection>::SharedPtr selected_pub_;
+  rclcpp::Subscription<techx_vision_bridge::msg::VisionRequest>::SharedPtr request_sub_;
   rclcpp::TimerBase::SharedPtr recv_timer_;
   rclcpp::TimerBase::SharedPtr watchdog_timer_;
+  rclcpp::TimerBase::SharedPtr selector_timer_;
 };
 
 int main(int argc, char **argv) {
