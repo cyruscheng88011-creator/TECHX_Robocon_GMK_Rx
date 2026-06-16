@@ -68,8 +68,12 @@ vision_bridge_node:
     T_arm1_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     T_arm2_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-    # UDP watchdog warning. Decision package still owns the actual stop/fallback behavior.
+    # Short watchdog: only warns and lets /selected become FRAME_STALE.
     watchdog_timeout_sec: 0.3
+
+    # Fatal watchdog: if no valid Jetson UDP V2/legacy frame is received for this
+    # long, the node shuts itself down. 600s = 10 minutes. Set 0.0 to disable.
+    fatal_no_udp_timeout_sec: 600.0
 
     # Request/selected behavior inside the same vision_bridge_node.
     # request_timeout_sec=0.0 keeps the latest request until decision sends a new one.
