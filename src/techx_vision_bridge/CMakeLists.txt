@@ -23,7 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 add_executable(vision_bridge_node
-  src/vision_bridge_node.cpp
+  src/vision_frame_bridge_node.cpp
 )
 
 target_include_directories(vision_bridge_node PRIVATE
