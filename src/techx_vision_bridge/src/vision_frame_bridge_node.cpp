@@ -39,7 +39,7 @@ constexpr uint8_t TYPE_KFS = 2;
 constexpr uint8_t TYPE_QR = 3;
 
 constexpr uint8_t FRAME_UNKNOWN = 0;
-constexpr uint8_t FRAME_CAMERA = 1;
+constexpr uint8_t FRAME_CAMERA_LINK = 1;
 constexpr uint8_t FRAME_ROBOT_BASE = 2;
 constexpr uint8_t FRAME_ARM1_BASE = 3;
 constexpr uint8_t FRAME_ARM2_BASE = 4;
@@ -89,7 +89,11 @@ struct Vec3 {
 };
 
 struct Transform {
-  std::array<std::array<double, 3>, 3> r{{{{1.0, 0.0, 0.0}}, {{0.0, 1.0, 0.0}}, {{0.0, 0.0, 1.0}}}};
+  std::array<std::array<double, 3>, 3> r{{
+      std::array<double, 3>{1.0, 0.0, 0.0},
+      std::array<double, 3>{0.0, 1.0, 0.0},
+      std::array<double, 3>{0.0, 0.0, 1.0},
+  }};
   Vec3 t{};
 };
 
@@ -104,10 +108,22 @@ struct DecodedTarget {
   float y{0.0f};
   float z{0.0f};
   bool valid_xyz{false};
+
   bool valid_robot_xyz{false};
   float robot_x{0.0f};
   float robot_y{0.0f};
   float robot_z{0.0f};
+
+  bool valid_arm1_xyz{false};
+  float arm1_x{0.0f};
+  float arm1_y{0.0f};
+  float arm1_z{0.0f};
+
+  bool valid_arm2_xyz{false};
+  float arm2_x{0.0f};
+  float arm2_y{0.0f};
+  float arm2_z{0.0f};
+
   uint8_t zone_id{ZONE_UNKNOWN};
   uint8_t target_type{TYPE_UNKNOWN};
   uint8_t control_frame{FRAME_UNKNOWN};
@@ -115,6 +131,7 @@ struct DecodedTarget {
   float control_x{0.0f};
   float control_y{0.0f};
   float control_z{0.0f};
+
   float align_err_x{0.0f};
   float align_err_y{0.0f};
   float priority{0.0f};
@@ -168,9 +185,9 @@ Transform make_transform_from_xyz_rpy(const std::vector<double> &p) {
   const double sy = std::sin(p[5]);
 
   // R = Rz(yaw) * Ry(pitch) * Rx(roll). point_out = R * point_in + t.
-  tf.r = {{{{cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr}},
-           {{sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr}},
-           {{-sp, cp * sr, cp * cr}}}};
+  tf.r = {{{cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr},
+           {sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr},
+           {-sp, cp * sr, cp * cr}}};
   return tf;
 }
 
@@ -435,14 +452,14 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   }
 
   void fill_transformed_coordinates(DecodedTarget &t) const {
+    t.control_frame = preferred_frame(t.target_type);
     if (!t.valid_xyz) {
-      t.control_frame = preferred_frame(t.target_type);
       return;
     }
 
     const Vec3 camera{t.x, t.y, t.z};
     if (!enable_transforms_) {
-      t.control_frame = FRAME_CAMERA;
+      t.control_frame = FRAME_CAMERA_LINK;
       t.valid_control_xyz = true;
       t.control_x = static_cast<float>(camera.x);
       t.control_y = static_cast<float>(camera.y);
@@ -451,20 +468,31 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     }
 
     const Vec3 robot = apply_transform(tf_robot_camera_, camera);
+    const Vec3 arm1 = apply_transform(tf_arm1_robot_, robot);
+    const Vec3 arm2 = apply_transform(tf_arm2_robot_, robot);
+
     t.valid_robot_xyz = true;
     t.robot_x = static_cast<float>(robot.x);
     t.robot_y = static_cast<float>(robot.y);
     t.robot_z = static_cast<float>(robot.z);
 
-    const uint8_t frame = preferred_frame(t.target_type);
-    t.control_frame = frame;
-    Vec3 control = robot;
-    if (frame == FRAME_ARM1_BASE) {
-      control = apply_transform(tf_arm1_robot_, robot);
-    } else if (frame == FRAME_ARM2_BASE) {
-      control = apply_transform(tf_arm2_robot_, robot);
-    } else if (frame == FRAME_CAMERA) {
-      control = camera;
+    t.valid_arm1_xyz = true;
+    t.arm1_x = static_cast<float>(arm1.x);
+    t.arm1_y = static_cast<float>(arm1.y);
+    t.arm1_z = static_cast<float>(arm1.z);
+
+    t.valid_arm2_xyz = true;
+    t.arm2_x = static_cast<float>(arm2.x);
+    t.arm2_y = static_cast<float>(arm2.y);
+    t.arm2_z = static_cast<float>(arm2.z);
+
+    Vec3 control = camera;
+    if (t.control_frame == FRAME_ROBOT_BASE) {
+      control = robot;
+    } else if (t.control_frame == FRAME_ARM1_BASE) {
+      control = arm1;
+    } else if (t.control_frame == FRAME_ARM2_BASE) {
+      control = arm2;
     }
 
     t.valid_control_xyz = true;
@@ -477,7 +505,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     if (target_type == TYPE_HEAD) return FRAME_ARM1_BASE;
     if (target_type == TYPE_KFS) return FRAME_ARM2_BASE;
     if (target_type == TYPE_QR) return FRAME_ROBOT_BASE;
-    return FRAME_CAMERA;
+    return FRAME_CAMERA_LINK;
   }
 
   rclcpp::Time stamp(const DecodedFrame &frame) const {
@@ -499,19 +527,33 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     msg.confidence = t.confidence;
     msg.u = t.u;
     msg.v = t.v;
+
     msg.valid_xyz = t.valid_xyz;
     msg.x = t.valid_xyz ? t.x : 0.0f;
     msg.y = t.valid_xyz ? t.y : 0.0f;
     msg.z = t.valid_xyz ? t.z : 0.0f;
+
     msg.valid_robot_xyz = t.valid_robot_xyz;
     msg.robot_x = t.valid_robot_xyz ? t.robot_x : 0.0f;
     msg.robot_y = t.valid_robot_xyz ? t.robot_y : 0.0f;
     msg.robot_z = t.valid_robot_xyz ? t.robot_z : 0.0f;
+
+    msg.valid_arm1_xyz = t.valid_arm1_xyz;
+    msg.arm1_x = t.valid_arm1_xyz ? t.arm1_x : 0.0f;
+    msg.arm1_y = t.valid_arm1_xyz ? t.arm1_y : 0.0f;
+    msg.arm1_z = t.valid_arm1_xyz ? t.arm1_z : 0.0f;
+
+    msg.valid_arm2_xyz = t.valid_arm2_xyz;
+    msg.arm2_x = t.valid_arm2_xyz ? t.arm2_x : 0.0f;
+    msg.arm2_y = t.valid_arm2_xyz ? t.arm2_y : 0.0f;
+    msg.arm2_z = t.valid_arm2_xyz ? t.arm2_z : 0.0f;
+
     msg.control_frame = t.control_frame;
     msg.valid_control_xyz = t.valid_control_xyz;
     msg.control_x = t.valid_control_xyz ? t.control_x : 0.0f;
     msg.control_y = t.valid_control_xyz ? t.control_y : 0.0f;
     msg.control_z = t.valid_control_xyz ? t.control_z : 0.0f;
+
     msg.align_err_x = t.align_err_x;
     msg.align_err_y = t.align_err_y;
     msg.priority = t.priority;
