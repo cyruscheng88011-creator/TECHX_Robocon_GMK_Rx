@@ -22,21 +22,34 @@ vision_bridge_node:
     image_width: 640.0
     image_height: 480.0
 
+    # Global competition class_id allocation carried by UDP V2:
+    #   KFS red R1        = 0
+    #   KFS red R2 fake   = 1
+    #   KFS red R2 true   = 2
+    #   KFS blue R1       = 3
+    #   KFS blue R2 fake  = 4
+    #   KFS blue R2 true  = 5
+    #   weapon head fist  = 100
+    #   weapon head palm  = 101
+    #   weapon head spear = 102
+    #   QR code           = 200
+    #
     # Class mapping rule format:
     #   "class_or_range:zone_id:target_type:control_frame:priority_bias"
     # Frame ids: 1=camera_link, 2=robot_base, 3=arm1_base, 4=arm2_base
     # Default competition mapping:
-    #   KFS  0~4     -> arm2_base
-    #   Head 100~149 -> arm1_base
-    #   QR   200     -> robot_base
+    #   KFS  0~5       -> arm2_base, decision chooses exact class_id/color.
+    #   Head 100~102   -> arm1_base, decision chooses fist/palm/spear.
+    #   QR   200       -> robot_base.
     # To add a new object later, reserve a new Jetson class_id range and add
     # one line here; other packages can keep subscribing /techx/vision/frame.
     class_rules:
-      - "0-4:2:2:4:0.0"
-      - "100-149:1:1:3:0.0"
+      - "0-5:2:2:4:0.0"
+      - "100-102:1:1:3:0.0"
       - "200:3:3:2:0.0"
-      # Example custom object:
-      # - "150-159:10:10:2:0.0"
+      # Reserved examples for future objects:
+      # - "150-159:10:10:2:0.0" # docking/assembly marker -> robot_base
+      # - "160-169:10:11:3:0.0" # arm1-specific auxiliary target -> arm1_base
 
     # Fixed extrinsics. Each list is [x, y, z, roll, pitch, yaw] in meters/radians.
     # T_robot_camera: point_robot = R * point_camera + t
