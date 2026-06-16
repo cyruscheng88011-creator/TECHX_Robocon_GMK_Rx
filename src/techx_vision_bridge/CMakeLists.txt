@@ -27,14 +27,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 add_executable(vision_bridge_node
   src/vision_frame_bridge_node.cpp
 )
-add_executable(vision_selector_node
-  src/vision_selector_node.cpp
-)
 
 target_include_directories(vision_bridge_node PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-target_include_directories(vision_selector_node PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -43,32 +37,23 @@ ament_target_dependencies(vision_bridge_node
   std_msgs
   geometry_msgs
 )
-ament_target_dependencies(vision_selector_node
-  rclcpp
-  std_msgs
-  geometry_msgs
-)
 
 rosidl_target_interfaces(vision_bridge_node
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
-)
-rosidl_target_interfaces(vision_selector_node
   ${PROJECT_NAME} "rosidl_typesupport_cpp"
 )
 
 find_package(Threads REQUIRED)
 target_link_libraries(vision_bridge_node Threads::Threads)
-target_link_libraries(vision_selector_node Threads::Threads)
 
 install(TARGETS
   vision_bridge_node
-  vision_selector_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(PROGRAMS
   tools/mock_jetson_sender.py
   tools/check_vision_bridge_config.py
+  tools/estimate_extrinsic_from_points.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
