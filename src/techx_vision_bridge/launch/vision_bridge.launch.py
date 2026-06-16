@@ -2,9 +2,11 @@
 # ============================================================================
 # vision_bridge.launch.py
 # Usage: ros2 launch techx_vision_bridge vision_bridge.launch.py
-# Starts:
-#   vision_bridge_node   Jetson UDP V2 -> /techx/vision/frame
-#   vision_selector_node /techx/vision/request + frame -> /techx/vision/selected
+# Starts one node only:
+#   vision_bridge_node
+# The single node handles:
+#   Jetson UDP V2 -> /techx/vision/frame
+#   /techx/vision/request -> /techx/vision/selected
 # ============================================================================
 
 import os
@@ -25,12 +27,4 @@ def generate_launch_description():
         parameters=[config_path],
     )
 
-    selector_node = Node(
-        package="techx_vision_bridge",
-        executable="vision_selector_node",
-        name="vision_selector_node",
-        output="screen",
-        parameters=[config_path],
-    )
-
-    return LaunchDescription([bridge_node, selector_node])
+    return LaunchDescription([bridge_node])
