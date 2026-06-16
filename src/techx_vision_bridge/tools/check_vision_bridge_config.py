@@ -5,7 +5,8 @@ This does not require ROS 2 runtime or hardware. It checks the single-node
 competition contract:
 
     vision_bridge_node receives Jetson UDP V2, publishes /frame,
-    subscribes /request, and publishes /selected.
+    subscribes /request, publishes /selected, and shuts down after a
+    configurable long no-data timeout.
 """
 
 from __future__ import annotations
@@ -63,6 +64,17 @@ def require_key(text: str, key: str) -> bool:
     return True
 
 
+def parse_float(text: str, key: str) -> float | None:
+    value = scalar_value(text, key)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        print(f"[ERROR] {key} is not a float: {value}")
+        return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check GMK single-node vision bridge config without ROS/hardware")
     parser.add_argument("--config", default="src/techx_vision_bridge/config/vision_bridge.yaml")
@@ -85,6 +97,8 @@ def main() -> int:
         "request_topic_name",
         "selected_topic_name",
         "enable_request_selector",
+        "watchdog_timeout_sec",
+        "fatal_no_udp_timeout_sec",
     ):
         if not require_key(text, key):
             errors += 1
@@ -113,6 +127,16 @@ def main() -> int:
 
     if scalar_value(text, "enable_request_selector") not in ("true", "True"):
         print("[WARN] enable_request_selector is not true; /request -> /selected will be disabled")
+
+    fatal_timeout = parse_float(text, "fatal_no_udp_timeout_sec")
+    if fatal_timeout is None:
+        errors += 1
+    elif fatal_timeout == 0.0:
+        print("[WARN] fatal_no_udp_timeout_sec is disabled; long no-data runs will not auto-terminate")
+    elif fatal_timeout < 60.0:
+        print("[WARN] fatal_no_udp_timeout_sec is very short; this may kill the bridge during normal startup")
+    else:
+        print(f"fatal_no_udp_timeout_sec: {fatal_timeout:.1f}s")
 
     for key in ("T_robot_camera_xyz_rpy", "T_arm1_robot_xyz_rpy", "T_arm2_robot_xyz_rpy"):
         if scalar_value(text, key) is None:
