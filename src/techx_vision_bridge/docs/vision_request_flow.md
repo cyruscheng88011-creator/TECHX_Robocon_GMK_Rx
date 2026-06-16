@@ -1,39 +1,71 @@
-# Decision-driven vision request flow
+# techx_vision_bridge 单节点请求流程
 
-`techx_vision_bridge` now has two layers:
+当前 GMK 视觉功能包正常运行时只有一个节点：
 
-1. `vision_bridge_node`: Jetson UDP V2 -> `/techx/vision/frame`
-2. `vision_selector_node`: `/techx/vision/request` + latest frame -> `/techx/vision/selected`
+```text
+vision_bridge_node
+```
 
-The raw frame topic remains the source of truth. The selector is a convenience layer that lets the decision package use vision as a smart sensor.
+这个节点同时负责两件事：
 
-## Topics
+```text
+1. 接收 Jetson UDP V2，发布完整视觉帧 /techx/vision/frame
+2. 接收 /techx/vision/request，发布请求对应结果 /techx/vision/selected
+```
 
-| Topic | Type | Direction | Purpose |
+所以使用者不需要启动 `vision_selector_node`，也不需要理解两个节点之间的内部转发。
+
+---
+
+## 话题
+
+| 话题 | 类型 | 方向 | 用途 |
 |---|---|---|---|
-| `/techx/vision/frame` | `VisionFrame` | bridge -> all packages | Complete latest vision frame |
-| `/techx/vision/request` | `VisionRequest` | decision -> selector | Desired target filter |
-| `/techx/vision/selected` | `VisionSelection` | selector -> decision/control | Best matching target from latest frame |
+| `/techx/vision/frame` | `VisionFrame` | bridge -> 其他包 | 完整最新视觉帧，包含所有目标 |
+| `/techx/vision/request` | `VisionRequest` | 决策/上层包 -> bridge | 告诉 bridge 当前想要哪类目标 |
+| `/techx/vision/selected` | `VisionSelection` | bridge -> 决策/上层包 | 根据 request 从最新 frame 中选出的最佳目标 |
 
-## Request examples
+`/frame` 是完整事实；`/selected` 是按请求筛出来的便捷结果。
 
-### Head for arm1
+---
+
+## 典型流程
+
+```text
+Jetson 持续发 UDP V2
+        ↓
+vision_bridge_node 持续发布 /techx/vision/frame
+        ↓
+决策包发布 /techx/vision/request，例如 class_id=100
+        ↓
+vision_bridge_node 从最新 frame 里筛 class_id=100
+        ↓
+vision_bridge_node 发布 /techx/vision/selected
+        ↓
+决策包读取 selected.target，生成底盘/机械臂命令
+```
+
+---
+
+## 请求示例
+
+### 请求拳头武器头
 
 ```text
 VisionRequest:
   request_seq: 1
   target_type: 1
   zone_id: 1
-  use_class_id: false
-  use_color: false
+  use_class_id: true
+  class_id: 100
   require_control_xyz: true
   min_confidence: 0.4
   max_frame_age_sec: 0.2
 ```
 
-The selected target should have `control_frame=3` (`arm1_base`).
+底盘使用 `selected.target.robot_x/y/z`，机械臂1使用 `selected.target.arm1_x/y/z`。
 
-### KFS for arm2
+### 请求红方 R2 真 KFS
 
 ```text
 VisionRequest:
@@ -41,16 +73,15 @@ VisionRequest:
   target_type: 2
   zone_id: 2
   use_class_id: true
-  class_id: 3
-  use_color: false
+  class_id: 2
   require_control_xyz: true
   min_confidence: 0.4
   max_frame_age_sec: 0.2
 ```
 
-The selected target should have `control_frame=4` (`arm2_base`).
+底盘使用 `selected.target.robot_x/y/z`，机械臂2使用 `selected.target.arm2_x/y/z`。
 
-### QR for robot alignment
+### 请求二维码
 
 ```text
 VisionRequest:
@@ -59,17 +90,16 @@ VisionRequest:
   zone_id: 3
   use_class_id: true
   class_id: 200
-  use_color: false
   require_control_xyz: false
   min_confidence: 0.3
   max_frame_age_sec: 0.2
 ```
 
-For horizontal alignment, use `target.align_err_x` and `target.align_err_y` even when depth is invalid. For approach distance, require `target.valid_control_xyz=true` and use `target.control_z`.
+二维码水平对齐可先用 `selected.target.align_err_x/y`。如果要靠近距离，必须确认三维坐标有效。
 
-## Status values
+---
 
-`VisionSelection.status`:
+## `VisionSelection.status`
 
 ```text
 0 STATUS_OK
@@ -80,38 +110,21 @@ For horizontal alignment, use `target.align_err_x` and `target.align_err_y` even
 5 STATUS_REQUEST_STALE
 ```
 
-Decision code must only command motion when:
+决策包只能在下面条件同时满足时使用数据：
 
 ```text
 has_match == true
 status == STATUS_OK
 ```
 
-For arm motion or QR approach, also require:
+如果要三维控制，还必须满足：
 
 ```text
-target.valid_control_xyz == true
+selected.target.valid_control_xyz == true
 ```
 
-## Recommended architecture
+---
 
-The decision package should publish one request whenever the task stage changes. The request remains active until a new request is sent, unless `request_timeout_sec` is configured.
+## 注意
 
-```text
-Task stage: Head pickup
-  publish VisionRequest(target_type=1, zone_id=1, require_control_xyz=true)
-  subscribe /techx/vision/selected
-  use selected.target.control_x/y/z
-
-Task stage: KFS
-  publish VisionRequest(target_type=2, zone_id=2, require_control_xyz=true)
-  subscribe /techx/vision/selected
-  use selected.target.control_x/y/z
-
-Task stage: QR alignment
-  publish VisionRequest(target_type=3, zone_id=3, class_id=200)
-  subscribe /techx/vision/selected
-  use selected.target.align_err_x/y first, then control_z when valid
-```
-
-This avoids duplicating target filtering logic across decision, navigation, and communication packages while preserving access to the complete raw `/techx/vision/frame` topic.
+`/request` 不会命令 Jetson 只识别某个目标。Jetson 仍持续识别并发送完整视觉帧。`/request` 只是在 GMK 端从最新视觉帧里筛选目标。
