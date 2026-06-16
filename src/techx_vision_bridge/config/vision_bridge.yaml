@@ -64,3 +64,8 @@ vision_selector_node:
     # Selected output refuses to use frames older than this. Decision can override
     # it per request with VisionRequest.max_frame_age_sec.
     default_max_frame_age_sec: 0.20
+
+    # Publish /techx/vision/selected periodically after a request is received,
+    # even when no new frame arrives. This lets decision nodes see FRAME_STALE
+    # instead of silently reusing the last OK target.
+    publish_period_ms: 50
