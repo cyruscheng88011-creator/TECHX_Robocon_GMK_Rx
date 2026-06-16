@@ -1,8 +1,8 @@
 # techx_vision_bridge
 
-`techx_vision_bridge` 是 GMK 端的 ROS 2 视觉桥接包。它只负责：**接收 Jetson 视觉端 UDP V2 视觉帧，完成必要的坐标系转换，然后发布 ROS 2 话题给导航、决策、下位机通信、调试可视化等其他包订阅。**
+`techx_vision_bridge` 是 GMK 端的 ROS 2 视觉桥接包。它只负责一件事：**接收 Jetson 视觉端发送的 UDP V2 视觉帧，把 camera_link 相机坐标转换到 GMK 需要的固定坐标系，然后发布 ROS 2 话题给导航、决策、下位机通信、调试可视化等其他包订阅。**
 
-本仓库现在只保留可移植源码包：
+本仓库只保留可移植源码包：
 
 ```text
 src/techx_vision_bridge
@@ -14,7 +14,7 @@ src/techx_vision_bridge
 
 ## 1. 包的定位
 
-GMK 工程里通常会有多个包：
+GMK 工程里通常会有多个包，例如：
 
 ```text
 gmk_ws/src/
@@ -24,49 +24,49 @@ gmk_ws/src/
   lower_comm_pkg/           # 下位机通信包：发送执行指令
 ```
 
-本包不做任务决策、不做路径规划、不直接控制下位机。其他包只需要订阅本包发布的话题，不需要自己解析 UDP。
+本包不做路径规划、不做任务决策、不直接控制下位机。其他包只需要订阅本包发布的话题，不需要自己解析 UDP。
 
 数据流：
 
 ```text
 Jetson vision UDP V2
-        │ camera-frame targets
+        │
         ▼
 techx_vision_bridge
-        │ frame/object topics with camera + control coordinates
-        ├── /techx/vision/frame       推荐给决策包使用
-        ├── /techx/vision/objects     单目标调试流
+        │
+        ├── /techx/vision/frame      推荐给决策包使用，一帧完整结果
+        ├── /techx/vision/objects    单目标调试流
         ├── /techx/vision/kfs_targets 兼容详细单目标流
-        └── /techx/vision/targets     兼容旧 XYZ 话题
+        └── /techx/vision/targets    兼容旧 XYZ 话题
 ```
 
 ---
 
-## 2. 比赛任务流程和目标类型
+## 2. 比赛流程与视觉目标
 
-当前比赛视觉大流程按任务阶段理解，不应只按图像区域粗暴处理：
+实际流程不是简单“三个区域同时处理”，而是有任务阶段：
 
 ```text
-阶段 A：机械臂1拿 Head
-  识别 Head 区域目标，输出机械臂1坐标系下的控制坐标。
+1. Head 获取阶段
+   Jetson 识别 Head，GMK 将目标转换到 arm1_base，机械臂1使用。
 
-阶段 B：Head 与 R1 对接/拼接判断
-  可能识别 R1 QR 做水平对准，也可能识别其他视觉特征判断拼接是否成功。
+2. Head 与 R1 对接阶段
+   可能识别 R1 QR 或其他对接特征，用于水平对准或判断对接是否成功。
 
-阶段 C：梅花林识别 KFS
-  主要识别 R2 真 KFS，下发 KFS 类别/颜色/位置，给机械臂2使用。
+3. KFS 阶段
+   在对应区域识别 R2 真 KFS，GMK 将 KFS 转换到 arm2_base，机械臂2使用。
 
-阶段 D：三区识别 R1 QR
-  用 QR 的像素误差做水平对齐，用 QR 距离 z 控制机器人靠近。
+4. QR 对齐/靠近阶段
+   识别 R1 QR，用 align_err_x/y 做水平对齐，用 robot_base 下的距离控制机器人靠近。
 ```
 
-目标类型约定：
+视觉端目前按三类目标组织：
 
-| 任务目标 | `zone_id` | `target_type` | 默认 `class_id` | 推荐控制坐标系 |
+| 目标 | `zone_id` | `target_type` | 默认 `class_id` | 推荐控制坐标系 |
 |---|---:|---:|---|---|
-| Head | `1` | `1` | `100~149` | 机械臂1坐标系 |
-| KFS | `2` | `2` | `0~4` | 机械臂2坐标系 |
-| QR | `3` | `3` | `200` | 机器人本体坐标系 |
+| Head | `1` | `1` | `100~149` | `arm1_base` |
+| KFS | `2` | `2` | `0~4` | `arm2_base` |
+| QR | `3` | `3` | `200` | `robot_base` |
 
 KFS 默认类别：
 
@@ -86,75 +86,84 @@ KFS 默认类别：
 2 blue
 ```
 
-决策包必须根据当前任务阶段筛选 `target_type`，不要“看到什么就处理什么”。
-
 ---
 
-## 3. 坐标系设计
+## 3. 四个固定坐标系
 
-相机安装在 R2 机器人正前方，因此 Jetson 解算出来的 `x/y/z` 首先是**相机坐标系**下的坐标。比赛控制至少需要三个使用坐标系：
-
-```text
-camera_link        Jetson 相机坐标系，原始视觉测距结果
-robot_base         机器人本体坐标系，用于 QR 对齐/靠近/底盘移动
-arm1_base          机械臂1坐标系，用于 Head 抓取/对接
-arm2_base          机械臂2坐标系，用于 KFS 抓取/操作
-```
-
-本包内部按以下固定外参做转换：
+本包按四个固定坐标系组织数据：
 
 ```text
-point_robot = T_robot_camera * point_camera
-point_arm1  = T_arm1_robot  * point_robot
-point_arm2  = T_arm2_robot  * point_robot
+camera_link
+  Jetson 相机坐标系。相机固定在机器人正前方某个位置。Jetson 下发的 x/y/z 永远是 camera_link。
+
+robot_base
+  机器人本体坐标系。用于底盘/本体移动，QR 对齐和靠近主要使用这个坐标系。
+
+arm1_base
+  机械臂1基座坐标系。Head 获取/对接相关目标建议使用这个坐标系。
+
+arm2_base
+  机械臂2基座坐标系。KFS 相关目标建议使用这个坐标系。
 ```
 
-配置文件参数：
+外参方向约定采用 `T_to_from`：
+
+```text
+p_robot = T_robot_camera * p_camera
+p_arm1  = T_arm1_robot  * p_robot
+p_arm2  = T_arm2_robot  * p_robot
+```
+
+配置文件里对应：
 
 ```yaml
+enable_transforms: true
 T_robot_camera_xyz_rpy: [x, y, z, roll, pitch, yaw]
 T_arm1_robot_xyz_rpy:  [x, y, z, roll, pitch, yaw]
 T_arm2_robot_xyz_rpy:  [x, y, z, roll, pitch, yaw]
 ```
 
-含义：
+单位：平移是米，旋转是弧度。旋转顺序：
 
 ```text
-T_robot_camera_xyz_rpy
-  把相机坐标点转换到机器人本体坐标系。
-
-T_arm1_robot_xyz_rpy
-  把机器人本体坐标点转换到机械臂1坐标系。
-
-T_arm2_robot_xyz_rpy
-  把机器人本体坐标点转换到机械臂2坐标系。
-
-roll/pitch/yaw 单位是 rad，旋转顺序是 Rz(yaw) * Ry(pitch) * Rx(roll)。
+R = Rz(yaw) * Ry(pitch) * Rx(roll)
+p_out = R * p_in + t
 ```
 
-默认这些外参都是 0，因此默认转换是单位变换。实车上必须根据安装位置进行标定。
-
-### Jetson 还需要做手眼标定吗？
-
-建议职责划分如下：
-
-```text
-Jetson 端：
-  负责相机内参、RGB-D 对齐、深度修正、目标识别、相机坐标 x/y/z。
-  不建议在 Jetson 内写死机械臂1/机械臂2/机器人本体外参。
-
-GMK 端：
-  负责机器人相关外参：T_robot_camera、T_arm1_robot、T_arm2_robot。
-  因为这些外参和 R2 机器人结构、机械臂安装位置、底盘坐标定义强相关。
-```
-
-如果相机固定在机器人前方，这更准确地说是**相机到机器人/机械臂基座的外参标定**，不一定是传统“眼在手上”的手眼标定。若机械臂基座固定在车体上，可以通过测量 + 标定板/已知点修正得到这些外参。若相机或机械臂基座会动，则应使用动态 TF/机械臂运动学，而不是固定参数。
+默认值全是 0，只是单位变换。实车要使用机械测量或标定得到真实外参。
 
 ---
 
-## 4. 推荐订阅话题
+## 4. Jetson 与 GMK 的职责边界
 
-### `/techx/vision/frame`
+Jetson 端负责：
+
+```text
+1. 相机采集和 RGB-D 对齐
+2. 目标识别和二维码/特征检测
+3. 深度查询
+4. 输出 camera_link 下的 x/y/z
+5. 输出 u/v 像素中心、confidence、class_id、color
+6. 通过 UDP V2 下发一帧多目标结果
+```
+
+GMK `techx_vision_bridge` 负责：
+
+```text
+1. 接收 UDP V2
+2. 校验 magic、长度、CRC、seq
+3. class_id -> target_type / zone_id 映射
+4. camera_link -> robot_base / arm1_base / arm2_base 坐标变换
+5. 发布 /techx/vision/frame 给其他包订阅
+```
+
+不建议把机械臂1、机械臂2、机器人本体外参写死在 Jetson 端。Jetson 只下发相机坐标，GMK 统一做控制坐标转换。
+
+---
+
+## 5. 推荐订阅话题
+
+### 5.1 `/techx/vision/frame`
 
 类型：
 
@@ -162,7 +171,7 @@ GMK 端：
 techx_vision_bridge/msg/VisionFrame
 ```
 
-这是推荐给决策包订阅的主话题。一条消息代表 Jetson 的一个完整视觉帧，里面包含本帧全部目标。
+这是**推荐给决策包订阅的主话题**。一条消息代表 Jetson 的一个完整视觉帧，里面包含本帧全部目标。
 
 主要字段：
 
@@ -186,39 +195,52 @@ has_target=true, target_count>0
   targets[] 里包含本帧全部目标。
 ```
 
-### `VisionObject` 关键字段
+### 5.2 `VisionObject` 目标字段
+
+每个目标同时包含相机坐标、机器人坐标、机械臂坐标和推荐控制坐标：
 
 ```text
-目标语义：zone_id / target_type / class_id / color
-检测信息：confidence / u / v
-相机坐标：valid_xyz / x / y / z
-机器人坐标：valid_robot_xyz / robot_x / robot_y / robot_z
-推荐控制坐标：control_frame / valid_control_xyz / control_x / control_y / control_z
-对齐误差：align_err_x / align_err_y
-排序分数：priority
+目标语义：
+  zone_id / target_type / class_id / color / confidence
+
+像素信息：
+  u / v / align_err_x / align_err_y
+
+camera_link 原始坐标：
+  valid_xyz / x / y / z
+
+robot_base 坐标：
+  valid_robot_xyz / robot_x / robot_y / robot_z
+
+arm1_base 坐标：
+  valid_arm1_xyz / arm1_x / arm1_y / arm1_z
+
+arm2_base 坐标：
+  valid_arm2_xyz / arm2_x / arm2_y / arm2_z
+
+推荐控制坐标：
+  control_frame / valid_control_xyz / control_x / control_y / control_z
 ```
 
-`x/y/z` 永远是 Jetson 原始相机坐标。真正给控制使用时，建议优先看 `control_frame + control_x/y/z`。
-
-`control_frame` 约定：
+`control_frame` 定义：
 
 ```text
-0 unknown
-1 camera_link
-2 robot_base
-3 arm1_base
-4 arm2_base
+0 FRAME_UNKNOWN
+1 FRAME_CAMERA_LINK
+2 FRAME_ROBOT_BASE
+3 FRAME_ARM1_BASE
+4 FRAME_ARM2_BASE
 ```
 
-默认映射：
+默认推荐：
 
 ```text
-Head -> arm1_base
-KFS  -> arm2_base
-QR   -> robot_base
+Head -> control_frame=FRAME_ARM1_BASE
+KFS  -> control_frame=FRAME_ARM2_BASE
+QR   -> control_frame=FRAME_ROBOT_BASE
 ```
 
-### 兼容话题
+### 5.3 兼容话题
 
 ```text
 /techx/vision/objects      techx_vision_bridge/msg/VisionObject
@@ -226,11 +248,11 @@ QR   -> robot_base
 /techx/vision/targets      techx_vision_bridge/msg/Target3D
 ```
 
-新决策包不建议优先使用兼容话题。`/techx/vision/targets` 不能表达无目标或识别到但无深度。
+新决策包建议优先订阅 `/techx/vision/frame`。`/techx/vision/targets` 只有 `valid_xyz=true` 的目标才会发布，不能表达无目标或无深度状态。
 
 ---
 
-## 5. UDP V2 协议
+## 6. UDP V2 协议
 
 Jetson 正式链路使用 UDP V2 包。每个推理周期发送一个 V2 包，即使没有目标也发送 `count=0`。
 
@@ -254,9 +276,9 @@ uint8_t color;
 float confidence;
 float u;
 float v;
-float x;             // camera frame
-float y;             // camera frame
-float z;             // camera frame, z>0 means valid 3D
+float x;
+float y;
+float z;
 ```
 
 包长度：
@@ -266,6 +288,19 @@ float z;             // camera frame, z>0 means valid 3D
 ```
 
 最后 2 字节是 CRC16-CCITT，覆盖前面所有字节。
+
+状态定义：
+
+```text
+count=0
+  当前帧无目标，但 Jetson/bridge 在线。
+
+count>0 且 z=0
+  识别到目标，但本帧没有有效 3D 距离。
+
+count>0 且 z>0
+  有有效 camera_link x/y/z，可进行 GMK 坐标变换。
+```
 
 旧 29 字节协议只作兼容，默认不接收：
 
@@ -277,7 +312,7 @@ accept_legacy: false
 
 ---
 
-## 6. 移植到其他 GMK 工程
+## 7. 移植到其他 GMK 工程
 
 只需要拷贝这个目录：
 
@@ -315,7 +350,7 @@ log/
 
 ---
 
-## 7. 编译和启动
+## 8. 编译和启动
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -341,9 +376,11 @@ vision_bridge_node:
     udp_port: 12345
 ```
 
+如果 launch 里改了节点名，YAML 顶层也必须同步修改。
+
 ---
 
-## 8. 模拟 Jetson 发送器
+## 9. 模拟 Jetson 发送器
 
 为了在没有真实 Jetson、相机、模型的情况下验证 GMK 数据流，本包提供模拟发送器：
 
@@ -369,13 +406,19 @@ ros2 topic echo /techx/vision/frame
 ros2 run techx_vision_bridge mock_jetson_sender.py --mode mixed --ip 127.0.0.1
 ```
 
+也可以直接运行脚本：
+
+```bash
+python3 src/techx_vision_bridge/tools/mock_jetson_sender.py --mode mixed --ip 127.0.0.1
+```
+
 支持模式：
 
 | mode | 说明 |
 |---|---|
 | `empty` | V2 `count=0`，无目标状态 |
 | `kfs` | 两个 KFS 目标 |
-| `head` | 一个 Head 区域目标 |
+| `head` | 一个 Head 目标 |
 | `qr` | 一个 QR 目标 |
 | `invalid-depth` | QR 目标但 `z=0` |
 | `mixed` | Head + KFS + QR 同帧 |
@@ -383,7 +426,7 @@ ros2 run techx_vision_bridge mock_jetson_sender.py --mode mixed --ip 127.0.0.1
 
 ---
 
-## 9. 其他包如何订阅
+## 10. 其他包如何订阅
 
 ### package.xml
 
@@ -419,14 +462,12 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
     }
 
     for (const auto &obj : msg->targets) {
-      if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_WEAPON_HEAD &&
-          obj.valid_control_xyz) {
-        // 使用 obj.control_x/y/z，坐标系为 arm1_base
-      } else if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_KFS &&
-                 obj.valid_control_xyz) {
-        // 使用 obj.control_x/y/z，坐标系为 arm2_base
+      if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_KFS) {
+        // 使用 obj.control_frame == FRAME_ARM2_BASE 的 control_x/y/z
       } else if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_QR) {
-        // 用 align_err_x/y 做水平对齐；valid_control_xyz 时用 control_z 控制距离
+        // 使用 align_err_x/y 对齐，使用 robot/control z 靠近
+      } else if (obj.target_type == techx_vision_bridge::msg::VisionObject::TYPE_WEAPON_HEAD) {
+        // 使用 obj.control_frame == FRAME_ARM1_BASE 的 control_x/y/z
       }
     }
   }
@@ -435,7 +476,7 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 
 ---
 
-## 10. 决策包处理建议
+## 11. 决策包处理建议
 
 不要写成“收到一个目标就立刻动作”。推荐流程：
 
@@ -450,10 +491,10 @@ sub_ = create_subscription<techx_vision_bridge::msg::VisionFrame>(
 任务阶段示例：
 
 ```text
-Head 阶段：只看 target_type=TYPE_WEAPON_HEAD，使用 arm1_base control 坐标
-KFS 阶段：只看 target_type=TYPE_KFS，使用 arm2_base control 坐标
-QR 对齐阶段：只看 target_type=TYPE_QR，用 align_err_x/y
-QR 靠近阶段：只看 target_type=TYPE_QR 且 valid_control_xyz=true，用 control_z
+Head 阶段：只看 TYPE_WEAPON_HEAD，使用 control_x/y/z，control_frame 应为 FRAME_ARM1_BASE
+KFS 阶段：只看 TYPE_KFS，使用 control_x/y/z，control_frame 应为 FRAME_ARM2_BASE
+QR 对齐阶段：只看 TYPE_QR，用 align_err_x/y
+QR 靠近阶段：只看 TYPE_QR 且 valid_control_xyz=true，用 control_z，control_frame 应为 FRAME_ROBOT_BASE
 ```
 
 QR 对齐建议：
@@ -463,9 +504,39 @@ abs(align_err_x) < 0.03
 abs(align_err_y) < 0.03
 ```
 
+多目标时不要按接收顺序选，建议综合：
+
+```text
+priority
+confidence
+valid_control_xyz
+任务需要的 class_id/color
+与图像中心的距离
+control_z 距离
+```
+
 ---
 
-## 11. 常见问题
+## 12. 仍需实车完成的标定
+
+本包提供坐标变换能力，但不会自动知道真实外参。实车需要确认：
+
+```text
+T_robot_camera_xyz_rpy
+  camera_link -> robot_base
+
+T_arm1_robot_xyz_rpy
+  robot_base -> arm1_base
+
+T_arm2_robot_xyz_rpy
+  robot_base -> arm2_base
+```
+
+如果这些外参仍为 0，所有坐标会等价于单位变换，不能作为精确机械臂抓取依据。
+
+---
+
+## 13. 常见问题
 
 ### 参数没生效
 
@@ -476,23 +547,40 @@ vision_bridge_node:
   ros__parameters:
 ```
 
-### 机械臂坐标明显不对
+不是包名。
 
-先确认 Jetson 发来的 `x/y/z` 是否正确，再检查 GMK 的外参：
+### 其他包找不到消息类型
 
-```yaml
-T_robot_camera_xyz_rpy
-T_arm1_robot_xyz_rpy
-T_arm2_robot_xyz_rpy
+确认已经执行：
+
+```bash
+source install/setup.bash
 ```
 
-如果外参还是 0，`control_x/y/z` 只是单位变换后的结果，不能用于实车精确抓取。
+如果改过 `.msg`，建议重新清理编译：
+
+```bash
+rm -rf build install log
+colcon build
+source install/setup.bash
+```
 
 ### 有 QR 目标但 `/techx/vision/targets` 没数据
 
 正常。旧 XYZ 话题只在 `valid_xyz=true` 时发布。请以 `/techx/vision/frame` 为主。
 
+### 没有目标时没有 `/techx/vision/targets`
+
+正常。无目标状态只在 `/techx/vision/frame` 表达：
+
+```text
+has_target=false
+target_count=0
+```
+
 ### 收不到 UDP
+
+检查端口：
 
 ```bash
 ss -lunp | grep 12345
@@ -500,21 +588,3 @@ sudo ufw allow 12345/udp
 ```
 
 确认 Jetson 的 `target_ip` 是 GMK 网口 IP。
-
----
-
-## 12. 当前源码文件
-
-仓库只保留必要源码：
-
-```text
-README.md
-.gitignore
-src/techx_vision_bridge/CMakeLists.txt
-src/techx_vision_bridge/package.xml
-src/techx_vision_bridge/msg/*.msg
-src/techx_vision_bridge/src/vision_frame_bridge_node.cpp
-src/techx_vision_bridge/launch/vision_bridge.launch.py
-src/techx_vision_bridge/config/vision_bridge.yaml
-src/techx_vision_bridge/tools/mock_jetson_sender.py
-```
