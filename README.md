@@ -1,25 +1,16 @@
 # techx_vision_bridge 使用说明（GMK 视觉功能包）
 
-这份文档只讲 GMK 仓库里的 `techx_vision_bridge` 功能包：**它是什么、怎么启动、需要配置什么、接收什么数据、发布什么数据、其他包怎么给它发请求、怎么拿到对应视觉目标。**
+这份文档只讲 GMK 仓库里的 `techx_vision_bridge` 功能包：它是什么、怎么启动、接收什么、发布什么、其他包应该给它发什么 request、每个字段是什么意思、需要配置哪些参数、断联时会发生什么。
 
-目标读者是第一次接触这个工程的人。看完后应该能做到：
-
-```text
-1. 知道这个包在整车里负责什么。
-2. 知道启动哪个节点。
-3. 知道 Jetson 需要给它发什么 UDP 数据。
-4. 知道决策包需要发布什么 request 才能拿到对应目标。
-5. 知道 /frame、/request、/selected 里每个关键字段是什么意思。
-6. 知道 vision_bridge.yaml 里哪些参数必须改。
-```
+目标读者是第一次接触这个工程的人。只要按本文走，就能知道这个包如何和 Jetson、决策包、通讯包、底盘包、机械臂包配合。
 
 ---
 
-## 0. 最重要结论
+## 0. 当前最终结论
 
 ### 0.1 这个包现在只有一个运行节点
 
-正常使用只启动一个节点：
+正常运行只启动一个节点：
 
 ```text
 vision_bridge_node
@@ -36,99 +27,46 @@ ros2 launch techx_vision_bridge vision_bridge.launch.py
 ```text
 接收 Jetson UDP V2
         ↓
-解析目标 class_id / 像素 / camera_link 坐标
+校验 magic / version / length / CRC / seq
         ↓
-转换 robot_base / arm1_base / arm2_base 坐标
+解析 class_id / color / confidence / u/v / camera_link x/y/z
+        ↓
+根据 class_rules 判断目标语义
+        ↓
+把 camera_link 转成 robot_base / arm1_base / arm2_base
         ↓
 发布完整视觉帧 /techx/vision/frame
         ↓
-接收决策包请求 /techx/vision/request
+接收上层请求 /techx/vision/request
         ↓
 发布对应目标 /techx/vision/selected
 ```
 
-也就是说，小白使用时只需要记住：
+小白只需要记住：
 
 ```text
-启动一个 launch
-看 /techx/vision/frame
-需要某个目标就发 /techx/vision/request
-结果从 /techx/vision/selected 取
+启动一个 launch。
+完整调试看 /techx/vision/frame。
+想要某个目标就发 /techx/vision/request。
+对应结果从 /techx/vision/selected 取。
 ```
 
-### 0.2 这个包的两个输入
+### 0.2 这个包不是控制包
 
-这个包接收两类输入。
-
-#### 输入 1：Jetson 发来的 UDP V2
-
-Jetson 负责相机、识别、深度，发 UDP 给 GMK。
+它不直接控制电机，也不直接规划机械臂。推荐分工：
 
 ```text
-Jetson UDP V2  -->  vision_bridge_node
+Jetson：相机、识别、深度、camera_link 坐标、UDP V2 发送。
+GMK techx_vision_bridge：UDP 接收、坐标转换、ROS2 视觉话题发布、按 request 筛目标。
+决策包：根据视觉数据决定任务动作。
+通讯包/底盘包/机械臂包：执行决策包给出的命令。
 ```
 
-#### 输入 2：其他 ROS2 包发来的目标请求
-
-比如决策包想要拳头、掌、矛头、KFS、二维码，就往 `/techx/vision/request` 发布请求。
-
-```text
-决策包 / 通讯包 / 其他上层包  -->  /techx/vision/request  -->  vision_bridge_node
-```
-
-### 0.3 这个包的三个主要输出
-
-| 话题 | 类型 | 作用 |
-|---|---|---|
-| `/techx/vision/frame` | `VisionFrame` | 完整一帧视觉数据，包含所有目标 |
-| `/techx/vision/objects` | `VisionObject` | 单个目标调试流，可选看 |
-| `/techx/vision/selected` | `VisionSelection` | 根据 `/request` 筛选出的当前对应目标 |
-
-最常用的是：
-
-```text
-完整调试看：/techx/vision/frame
-按需求拿目标看：/techx/vision/selected
-```
+通讯包可以临时订阅视觉话题做测试，但正式结构里不建议通讯包直接做视觉决策。
 
 ---
 
-## 1. 这个包到底是什么
-
-`techx_vision_bridge` 是 GMK 端的视觉桥接功能包。
-
-它的作用不是控制机器人，而是把 Jetson 的识别结果变成 ROS2 里可直接使用的视觉传感器数据。
-
-它负责：
-
-```text
-1. 监听 UDP 端口，接收 Jetson 发来的视觉数据包。
-2. 校验 UDP 包是否合法，例如 magic、version、长度、CRC、seq。
-3. 读取每个目标的 class_id、颜色、置信度、像素中心、camera_link 坐标。
-4. 根据 class_id 判断目标是武器头、KFS 还是二维码。
-5. 使用 vision_bridge.yaml 里的外参，把 camera_link 坐标转换到 robot_base、arm1_base、arm2_base。
-6. 发布完整视觉帧 /techx/vision/frame。
-7. 接收 /techx/vision/request。
-8. 根据 request 从最新视觉帧中筛出目标，发布 /techx/vision/selected。
-```
-
-它不负责：
-
-```text
-不训练模型
-不打开相机
-不控制底盘电机
-不控制机械臂关节
-不做导航规划
-不做机械臂逆解
-不替代决策状态机
-```
-
----
-
-## 2. 最终运行流程
-
-整车中推荐的数据流是：
+## 1. 整体数据流
 
 ```text
 Jetson + RGB-D 相机
@@ -141,75 +79,189 @@ Jetson + RGB-D 相机
 GMK: techx_vision_bridge / vision_bridge_node
   │
   │  接收 UDP
-  │  解析目标
-  │  转换坐标
-  │  发布完整帧 /techx/vision/frame
+  │  校验数据包
+  │  class_id -> target_type / zone_id / control_frame
+  │  camera_link -> robot_base / arm1_base / arm2_base
+  │  发布 /techx/vision/frame
   │
   │  同时订阅 /techx/vision/request
-  │  根据请求发布 /techx/vision/selected
+  │  根据 request 从最新 frame 里筛目标
+  │  发布 /techx/vision/selected
   ▼
 决策包
   │
-  │  订阅 /techx/vision/frame 或 /techx/vision/selected
-  │  决定底盘、机械臂、吸盘、夹爪该怎么动
+  │  读取 /techx/vision/frame 或 /techx/vision/selected
+  │  判断当前任务阶段
+  │  输出底盘、机械臂、吸盘、夹爪动作命令
   ▼
 通讯包 / 底盘包 / 机械臂包
   │
-  │  执行决策包发来的命令
+  │  把动作命令发给下位机或执行机构
   ▼
-下位机 / 电机 / 执行机构
+电机 / 机械臂 / 底盘 / 吸盘 / 夹爪
 ```
 
-注意：
-
-```text
-通讯包一般不直接做视觉决策。
-推荐是：决策包读视觉数据，决策包再把动作命令发给通讯包。
-```
-
-如果你们暂时没有独立决策包，也可以让通讯包直接订阅 `/selected`，但它仍然必须检查 `status`、`has_match`、`valid_control_xyz`，不能直接拿数据就动作。
+注意：`/techx/vision/request` 不是让 Jetson 只识别某个目标。Jetson 仍持续识别当前启用的所有目标；request 只是让 GMK 在最新视觉帧中筛出你当前想要的目标。
 
 ---
 
-## 3. “发什么数据，才能得到对应目标”
+## 2. 这个包接收什么
 
-核心就是 `/techx/vision/request`。
+### 2.1 输入 1：Jetson UDP V2
 
-你要对应目标，就给这个包发一个 `VisionRequest`。
+Jetson 每次推理完成后发一帧 UDP V2 给 GMK。GMK 配置里的接收端口默认是：
 
-例如：
-
-```text
-想要拳头武器头：发 class_id=100
-想要掌武器头：发 class_id=101
-想要矛头武器头：发 class_id=102
-想要红方 R2 真 KFS：发 class_id=2
-想要蓝方 R2 真 KFS：发 class_id=5
-想要二维码：发 class_id=200
+```yaml
+udp_bind_addr: "0.0.0.0"
+udp_port: 12345
 ```
 
-然后这个包会在 `/techx/vision/selected` 输出当前最新帧里最符合 request 的目标。
+Jetson 的目标 IP 要写成 GMK 的 IP，端口要等于 `12345` 或你自己改的端口。
 
-重要：
+### 2.2 输入 2：ROS2 请求 `/techx/vision/request`
+
+上层包想要某个目标，就发布 `VisionRequest` 到：
 
 ```text
-/request 不会命令 Jetson 改模型。
-/request 的作用是：在 GMK 已收到的最新视觉帧里筛出你想要的目标。
+/techx/vision/request
+```
+
+典型例子：
+
+```text
+想要拳头武器头：class_id = 100
+想要掌武器头：class_id = 101
+想要矛头武器头：class_id = 102
+想要红方 R2 真 KFS：class_id = 2
+想要蓝方 R2 真 KFS：class_id = 5
+想要二维码：class_id = 200
+```
+
+收到 request 后，`vision_bridge_node` 会从最新 `/frame` 中筛目标，并把结果发到 `/selected`。
+
+---
+
+## 3. 这个包发布什么
+
+| 话题 | 类型 | 默认是否开 | 用途 |
+|---|---|---|---|
+| `/techx/vision/frame` | `VisionFrame` | 开 | 完整一帧视觉结果，包含所有目标，是主数据源 |
+| `/techx/vision/objects` | `VisionObject` | 开 | 单目标调试流，可用于调试 |
+| `/techx/vision/selected` | `VisionSelection` | 开 | 根据 `/request` 选出的当前对应目标 |
+| `/techx/vision/kfs_targets` | 旧消息 | 关 | 旧兼容话题，不推荐新代码用 |
+| `/techx/vision/targets` | 旧消息 | 关 | 旧兼容话题，不推荐新代码用 |
+
+推荐：
+
+```text
+调试和复杂决策：订阅 /techx/vision/frame。
+简单按阶段拿目标：发布 /request，订阅 /selected。
 ```
 
 ---
 
-## 4. 三个核心话题怎么用
+## 4. UDP V2 数据包格式
 
-## 4.1 `/techx/vision/frame`，完整视觉帧
+Jetson -> GMK 的 UDP V2 是“一帧多目标”，不是一个目标一个包。
 
-类型：
+包结构：
 
 ```text
-techx_vision_bridge/msg/VisionFrame
+Header 17 字节
+Target 0~16 个，每个 27 字节
+CRC16 2 字节
 ```
 
-它表示 Jetson 一帧识别结果。
+Header：
+
+| 字段 | 类型 | 含义 |
+|---|---|---|
+| `magic` | uint16 | 固定 `0x55AB` |
+| `version` | uint8 | 当前为 `2` |
+| `flags` | uint8 | 预留，当前一般为 0 |
+| `seq` | uint32 | Jetson 递增帧序号 |
+| `timestamp` | float64 | Jetson 视觉帧时间戳 |
+| `count` | uint8 | 本帧目标数量，0~16 |
+
+Target：
+
+| 字段 | 类型 | 含义 |
+|---|---|---|
+| `track_id` | uint8 | 跟踪 ID |
+| `class_id` | uint8 | 全局目标类别编号 |
+| `color` | uint8 | 0 未知，1 红，2 蓝 |
+| `confidence` | float32 | 置信度 |
+| `u` | float32 | 像素中心 u |
+| `v` | float32 | 像素中心 v |
+| `x` | float32 | camera_link X，单位 m |
+| `y` | float32 | camera_link Y，单位 m |
+| `z` | float32 | camera_link Z，单位 m |
+
+重要语义：
+
+```text
+count=0：Jetson 和 GMK 通讯在线，但这一帧没有目标。
+z=0：识别到了目标，但没有有效深度，不能用于三维控制。
+长时间没有任何 UDP：Jetson/网络/GMK 链路可能断开。
+```
+
+GMK 会检查 magic、version、长度、CRC、seq。非法包会丢弃，不会发布成目标。
+
+---
+
+## 5. 比赛目标 class_id 分配
+
+UDP 里不传字符串名，只传 `class_id`。因此 Jetson、GMK、决策包必须使用同一张全局编号表。
+
+### 5.1 武器头三类
+
+| class_id | 名称 | 中文 | target_type | zone_id | 默认 control_frame |
+|---:|---|---|---:|---:|---|
+| 100 | `weapon_head_fist` | 拳头 | 1 | 1 | arm1_base |
+| 101 | `weapon_head_palm` | 掌 | 1 | 1 | arm1_base |
+| 102 | `weapon_head_spear` | 矛头 | 1 | 1 | arm1_base |
+
+底盘靠近武器头时用 `robot_x/y/z`，机械臂1抓取时用 `arm1_x/y/z`。
+
+### 5.2 KFS 六类
+
+| class_id | 名称 | 中文 | color | target_type | zone_id | 默认 control_frame |
+|---:|---|---|---:|---:|---:|---|
+| 0 | `kfs_red_r1` | 红方 R1 KFS | 1 | 2 | 2 | arm2_base |
+| 1 | `kfs_red_r2_fake` | 红方 R2 假 KFS | 1 | 2 | 2 | arm2_base |
+| 2 | `kfs_red_r2_true` | 红方 R2 真 KFS | 1 | 2 | 2 | arm2_base |
+| 3 | `kfs_blue_r1` | 蓝方 R1 KFS | 2 | 2 | 2 | arm2_base |
+| 4 | `kfs_blue_r2_fake` | 蓝方 R2 假 KFS | 2 | 2 | 2 | arm2_base |
+| 5 | `kfs_blue_r2_true` | 蓝方 R2 真 KFS | 2 | 2 | 2 | arm2_base |
+
+梅花林阶段通常不要只筛 `target_type=2`，应该精确筛：
+
+```text
+红方 R2 真 KFS：class_id=2
+蓝方 R2 真 KFS：class_id=5
+```
+
+底盘靠近 KFS 用 `robot_x/y/z`，机械臂2操作 KFS 用 `arm2_x/y/z`。
+
+### 5.3 二维码
+
+| class_id | 名称 | 中文 | target_type | zone_id | 默认 control_frame |
+|---:|---|---|---:|---:|---|
+| 200 | `qr_code` | 二维码 | 3 | 3 | robot_base |
+
+二维码水平对齐通常用 `align_err_x/y`，靠近距离用 `robot_x/y/z` 或 `control_z`。当前协议不传二维码字符串内容。
+
+---
+
+## 6. 三个核心 ROS2 消息
+
+### 6.1 `VisionFrame`：完整一帧
+
+话题：
+
+```text
+/techx/vision/frame
+```
 
 字段：
 
@@ -223,25 +275,13 @@ techx_vision_bridge/msg/VisionFrame
 | `has_target` | 本帧是否有目标 |
 | `targets[]` | 所有目标，每个都是 `VisionObject` |
 
-`target_count=0` 的含义：
+### 6.2 `VisionRequest`：上层请求
+
+话题：
 
 ```text
-Jetson 和 GMK 通讯在线，但当前这一帧没有目标。
+/techx/vision/request
 ```
-
-长时间没有 `/frame` 消息，才说明链路可能断了。
-
----
-
-## 4.2 `/techx/vision/request`，目标请求
-
-类型：
-
-```text
-techx_vision_bridge/msg/VisionRequest
-```
-
-决策包或其他上层包往这里发请求。
 
 字段：
 
@@ -254,38 +294,24 @@ techx_vision_bridge/msg/VisionRequest
 | `class_id` | 具体目标编号 |
 | `use_color` | 是否按颜色筛选 |
 | `color` | 0 未知，1 红，2 蓝 |
-| `require_control_xyz` | 是否要求必须有有效三维控制坐标 |
+| `require_control_xyz` | 是否要求目标必须有有效三维控制坐标 |
 | `min_confidence` | 最低置信度 |
-| `max_frame_age_sec` | 允许使用的最大视觉帧年龄，单位秒 |
+| `max_frame_age_sec` | 允许使用的最大视觉帧年龄，单位秒，0 使用默认值 |
 
-`target_type`：
+### 6.3 `VisionSelection`：请求对应结果
 
-| 数值 | 含义 |
-|---:|---|
-| 0 | 任意 |
-| 1 | 武器头 |
-| 2 | KFS |
-| 3 | 二维码 |
-| 10 | 自定义 |
-
----
-
-## 4.3 `/techx/vision/selected`，请求对应结果
-
-类型：
+话题：
 
 ```text
-techx_vision_bridge/msg/VisionSelection
+/techx/vision/selected
 ```
-
-它是这个包根据最新 request 给出的结果。
 
 字段：
 
 | 字段 | 含义 |
 |---|---|
 | `frame_seq` | 结果来自哪一帧视觉数据 |
-| `request_seq` | 对应哪个请求 |
+| `request_seq` | 对应哪个 request |
 | `has_request` | 是否已经收到 request |
 | `has_match` | 是否找到符合 request 的目标 |
 | `status` | 当前状态 |
@@ -296,12 +322,12 @@ techx_vision_bridge/msg/VisionSelection
 
 `status`：
 
-| 数值 | 含义 | 能不能用 |
+| 数值 | 含义 | 能不能控制 |
 |---:|---|---|
 | 0 | 正常找到目标 | 继续检查坐标有效后可用 |
 | 1 | 没收到 request | 不能用 |
 | 2 | 没收到视觉帧 | 不能用 |
-| 3 | 没找到匹配目标 | 不能用 |
+| 3 | 没有匹配目标 | 不能用 |
 | 4 | 视觉帧太旧 | 不能用 |
 | 5 | request 太旧 | 不能用 |
 
@@ -312,7 +338,7 @@ status == 0
 has_match == true
 ```
 
-如果要用三维坐标，还必须检查：
+如果需要三维控制，还必须检查：
 
 ```text
 target.valid_control_xyz == true
@@ -320,325 +346,53 @@ target.valid_control_xyz == true
 
 ---
 
-## 5. VisionObject 每个字段含义
-
-`VisionObject` 是一个目标的数据结构。
-
-### 5.1 目标身份
+## 7. `VisionObject` 每个目标字段
 
 | 字段 | 含义 |
 |---|---|
-| `zone_id` | 区域：1 武器头，2 KFS，3 二维码 |
-| `target_type` | 目标大类：1 武器头，2 KFS，3 二维码 |
-| `class_id` | 最具体的目标编号 |
-| `color` | 0 未知，1 红，2 蓝 |
-| `confidence` | 置信度 |
-
-### 5.2 像素和对齐
-
-| 字段 | 含义 |
-|---|---|
-| `u` | 图像中心点横坐标 |
-| `v` | 图像中心点纵坐标 |
-| `align_err_x` | 相对图像中心的横向误差，可用于底盘水平对齐 |
-| `align_err_y` | 相对图像中心的纵向误差 |
-
-### 5.3 相机坐标
-
-| 字段 | 含义 |
-|---|---|
+| `zone_id` | 目标区域，1 武器头，2 KFS，3 二维码 |
+| `target_type` | 目标类型，1 武器头，2 KFS，3 二维码 |
+| `class_id` | 具体目标编号，最重要 |
+| `color` | 颜色，0 未知，1 红，2 蓝 |
+| `confidence` | 识别置信度 |
+| `u/v` | 像素中心 |
 | `valid_xyz` | camera_link 坐标是否有效 |
-| `x/y/z` | 目标在 camera_link 下的位置，单位 m |
-
-这是 Jetson 原始输出。
-
-### 5.4 机器人本体坐标
-
-| 字段 | 含义 |
-|---|---|
+| `x/y/z` | camera_link 坐标，单位 m |
 | `valid_robot_xyz` | robot_base 坐标是否有效 |
-| `robot_x/y/z` | 目标在机器人本体坐标系下的位置，单位 m |
-
-底盘靠近武器头、靠近 KFS、二维码对齐和靠近，都优先用这个。
-
-### 5.5 机械臂1坐标
-
-| 字段 | 含义 |
-|---|---|
+| `robot_x/y/z` | robot_base 坐标，底盘/导航用 |
 | `valid_arm1_xyz` | arm1_base 坐标是否有效 |
-| `arm1_x/y/z` | 目标在机械臂1基座坐标系下的位置，单位 m |
-
-机械臂1抓武器头用这个。
-
-### 5.6 机械臂2坐标
-
-| 字段 | 含义 |
-|---|---|
+| `arm1_x/y/z` | arm1_base 坐标，机械臂1用 |
 | `valid_arm2_xyz` | arm2_base 坐标是否有效 |
-| `arm2_x/y/z` | 目标在机械臂2基座坐标系下的位置，单位 m |
-
-机械臂2操作 KFS 用这个。
-
-### 5.7 推荐控制坐标
-
-| 字段 | 含义 |
-|---|---|
-| `control_frame` | 推荐坐标系 |
-| `valid_control_xyz` | 推荐坐标是否有效 |
+| `arm2_x/y/z` | arm2_base 坐标，机械臂2用 |
+| `control_frame` | 推荐控制坐标系 |
+| `valid_control_xyz` | 推荐控制坐标是否有效 |
 | `control_x/y/z` | 推荐控制坐标 |
+| `align_err_x/y` | 相对图像中心的归一化误差，常用于对齐 |
+| `priority` | 选择优先级 |
 
-`control_frame`：
-
-| 数值 | 坐标系 |
-|---:|---|
-| 1 | camera_link |
-| 2 | robot_base |
-| 3 | arm1_base |
-| 4 | arm2_base |
-
-注意：`control_x/y/z` 是默认推荐值，不是唯一能用的值。
-
-更稳的规则：
+使用原则：
 
 ```text
-底盘用 robot_x/y/z
-机械臂1用 arm1_x/y/z
-机械臂2用 arm2_x/y/z
+底盘：用 robot_x/y/z。
+机械臂1：用 arm1_x/y/z。
+机械臂2：用 arm2_x/y/z。
+简单快速使用：可用 control_x/y/z，但要先看 control_frame。
 ```
 
 ---
 
-## 6. 比赛 class_id 分配
+## 8. 坐标系和外参
 
-UDP V2 里不传字符串，只传 `class_id`。
-
-### 6.1 武器头
-
-| class_id | 中文 | target_type | zone_id | 推荐坐标 |
-|---:|---|---:|---:|---|
-| 100 | 拳头 | 1 | 1 | arm1_base |
-| 101 | 掌 | 1 | 1 | arm1_base |
-| 102 | 矛头 | 1 | 1 | arm1_base |
-
-使用：
+四个坐标系：
 
 ```text
-底盘靠近：robot_x/y/z
-机械臂1抓取：arm1_x/y/z
+camera_link：Jetson 相机坐标系，UDP 里的 x/y/z 属于它。
+robot_base：机器人本体坐标系，底盘/导航用。
+arm1_base：机械臂1基座坐标系，武器头抓取用。
+arm2_base：机械臂2基座坐标系，KFS 操作用。
 ```
 
-### 6.2 KFS
-
-| class_id | 中文 | color | target_type | zone_id | 推荐坐标 |
-|---:|---|---:|---:|---:|---|
-| 0 | 红方 R1 KFS | 1 | 2 | 2 | arm2_base |
-| 1 | 红方 R2 假 KFS | 1 | 2 | 2 | arm2_base |
-| 2 | 红方 R2 真 KFS | 1 | 2 | 2 | arm2_base |
-| 3 | 蓝方 R1 KFS | 2 | 2 | 2 | arm2_base |
-| 4 | 蓝方 R2 假 KFS | 2 | 2 | 2 | arm2_base |
-| 5 | 蓝方 R2 真 KFS | 2 | 2 | 2 | arm2_base |
-
-梅花林阶段一般要精确请求：
-
-```text
-红方 R2 真 KFS：class_id = 2
-蓝方 R2 真 KFS：class_id = 5
-```
-
-### 6.3 二维码
-
-| class_id | 中文 | target_type | zone_id | 推荐坐标 |
-|---:|---|---:|---:|---|
-| 200 | 二维码 | 3 | 3 | robot_base |
-
-二维码对齐：
-
-```text
-align_err_x / align_err_y
-```
-
-二维码靠近：
-
-```text
-robot_x/y/z 或 control_z
-```
-
-当前协议不传二维码字符串内容。
-
----
-
-## 7. 常用请求例子
-
-### 7.1 请求拳头武器头
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 1,
-  target_type: 1,
-  zone_id: 1,
-  use_class_id: true,
-  class_id: 100,
-  use_color: false,
-  require_control_xyz: true,
-  min_confidence: 0.4,
-  max_frame_age_sec: 0.2
-}"
-```
-
-结果看：
-
-```bash
-ros2 topic echo /techx/vision/selected
-```
-
-控制使用：
-
-```text
-底盘：selected.target.robot_x/y/z
-机械臂1：selected.target.arm1_x/y/z
-```
-
-### 7.2 请求掌
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 2,
-  target_type: 1,
-  zone_id: 1,
-  use_class_id: true,
-  class_id: 101,
-  use_color: false,
-  require_control_xyz: true,
-  min_confidence: 0.4,
-  max_frame_age_sec: 0.2
-}"
-```
-
-### 7.3 请求矛头
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 3,
-  target_type: 1,
-  zone_id: 1,
-  use_class_id: true,
-  class_id: 102,
-  use_color: false,
-  require_control_xyz: true,
-  min_confidence: 0.4,
-  max_frame_age_sec: 0.2
-}"
-```
-
-### 7.4 请求红方 R2 真 KFS
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 4,
-  target_type: 2,
-  zone_id: 2,
-  use_class_id: true,
-  class_id: 2,
-  use_color: false,
-  require_control_xyz: true,
-  min_confidence: 0.4,
-  max_frame_age_sec: 0.2
-}"
-```
-
-### 7.5 请求蓝方 R2 真 KFS
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 5,
-  target_type: 2,
-  zone_id: 2,
-  use_class_id: true,
-  class_id: 5,
-  use_color: false,
-  require_control_xyz: true,
-  min_confidence: 0.4,
-  max_frame_age_sec: 0.2
-}"
-```
-
-### 7.6 请求二维码
-
-二维码水平对齐时可以不强制三维坐标：
-
-```bash
-ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
-  request_seq: 6,
-  target_type: 3,
-  zone_id: 3,
-  use_class_id: true,
-  class_id: 200,
-  use_color: false,
-  require_control_xyz: false,
-  min_confidence: 0.3,
-  max_frame_age_sec: 0.2
-}"
-```
-
-如果二维码靠近需要距离，就要确认：
-
-```text
-selected.target.valid_robot_xyz == true
-```
-
----
-
-## 8. Jetson UDP V2 数据包
-
-Jetson 每次推理完成会发一个 UDP V2 包。
-
-结构：
-
-```text
-Header 17 字节
-Target 0~16 个，每个 27 字节
-CRC16 2 字节
-```
-
-Header：
-
-| 字段 | 类型 | 含义 |
-|---|---|---|
-| `magic` | uint16 | 固定 0x55AB |
-| `version` | uint8 | 当前为 2 |
-| `flags` | uint8 | 预留 |
-| `seq` | uint32 | 帧序号 |
-| `timestamp` | double | Jetson 时间戳 |
-| `count` | uint8 | 目标数量，0~16 |
-
-Target：
-
-| 字段 | 类型 | 含义 |
-|---|---|---|
-| `track_id` | uint8 | 跟踪 ID |
-| `class_id` | uint8 | 全局类别编号 |
-| `color` | uint8 | 0 未知，1 红，2 蓝 |
-| `confidence` | float32 | 置信度 |
-| `u/v` | float32 | 像素中心 |
-| `x/y/z` | float32 | camera_link 坐标，单位 m |
-
-`count=0` 表示：
-
-```text
-通信在线，但当前帧没有目标。
-```
-
-`z=0` 通常表示：
-
-```text
-识别到了目标，但是深度无效，不能用于三维控制。
-```
-
----
-
-## 9. 坐标系和外参
-
-这个包内部负责统一转换：
+本包负责：
 
 ```text
 p_robot = T_robot_camera * p_camera
@@ -646,18 +400,80 @@ p_arm1  = T_arm1_robot  * p_robot
 p_arm2  = T_arm2_robot  * p_robot
 ```
 
-配置在：
+其他包不要重复做 `camera_link -> robot_base/arm_base`。如果导航包要把 `robot_base` 转到 `map/odom`，那属于导航定位问题，不属于这个包的相机外参转换。
+
+---
+
+## 9. 配置文件 `vision_bridge.yaml`
+
+路径：
 
 ```text
 src/techx_vision_bridge/config/vision_bridge.yaml
 ```
 
-参数：
+当前只有一个顶层节点：
 
 ```yaml
-T_robot_camera_xyz_rpy: [x, y, z, roll, pitch, yaw]
-T_arm1_robot_xyz_rpy: [x, y, z, roll, pitch, yaw]
-T_arm2_robot_xyz_rpy: [x, y, z, roll, pitch, yaw]
+vision_bridge_node:
+  ros__parameters:
+```
+
+不要再写 `vision_selector_node` 顶层配置，因为现在已经合并成单节点。
+
+关键参数：
+
+```yaml
+udp_bind_addr: "0.0.0.0"
+udp_port: 12345
+frame_topic_name: "/techx/vision/frame"
+object_topic_name: "/techx/vision/objects"
+request_topic_name: "/techx/vision/request"
+selected_topic_name: "/techx/vision/selected"
+enable_request_selector: true
+reliable_qos: true
+qos_depth: 5
+image_width: 640.0
+image_height: 480.0
+```
+
+### 9.1 class_rules
+
+```yaml
+class_rules:
+  - "0-5:2:2:4:0.0"
+  - "100-102:1:1:3:0.0"
+  - "200:3:3:2:0.0"
+```
+
+格式：
+
+```text
+"class_or_range:zone_id:target_type:control_frame:priority_bias"
+```
+
+`control_frame`：
+
+```text
+1=camera_link
+2=robot_base
+3=arm1_base
+4=arm2_base
+```
+
+### 9.2 外参
+
+```yaml
+enable_transforms: true
+T_robot_camera_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+T_arm1_robot_xyz_rpy:  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+T_arm2_robot_xyz_rpy:  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+```
+
+格式是：
+
+```text
+[x, y, z, roll, pitch, yaw]
 ```
 
 单位：
@@ -667,58 +483,55 @@ x/y/z：米
 roll/pitch/yaw：弧度
 ```
 
-其他包不要再重复做 `camera_link -> robot_base / arm_base`。这个包已经输出了转换后的坐标。
+方向：
 
----
+```text
+T_robot_camera：point_robot = R * point_camera + t
+T_arm1_robot： point_arm1  = R * point_robot  + t
+T_arm2_robot： point_arm2  = R * point_robot  + t
+```
 
-## 10. vision_bridge.yaml 需要填什么
-
-最重要的是这些：
+### 9.3 断联保护
 
 ```yaml
-udp_port: 12345
-frame_topic_name: "/techx/vision/frame"
-request_topic_name: "/techx/vision/request"
-selected_topic_name: "/techx/vision/selected"
-enable_request_selector: true
-image_width: 640.0
-image_height: 480.0
-class_rules:
-  - "0-5:2:2:4:0.0"
-  - "100-102:1:1:3:0.0"
-  - "200:3:3:2:0.0"
-T_robot_camera_xyz_rpy: [...]
-T_arm1_robot_xyz_rpy: [...]
-T_arm2_robot_xyz_rpy: [...]
+watchdog_timeout_sec: 0.3
+fatal_no_udp_timeout_sec: 600.0
 ```
 
-`class_rules` 格式：
+含义：
 
 ```text
-"class_or_range:zone_id:target_type:control_frame:priority_bias"
+watchdog_timeout_sec：短时间无 UDP，只报警，并让 /selected 变成 FRAME_STALE。
+fatal_no_udp_timeout_sec：长时间无有效 UDP，节点主动 shutdown。600 秒 = 10 分钟，0 表示禁用。
 ```
 
-`control_frame`：
+想改成 5 分钟自动退出：
 
-```text
-2 = robot_base
-3 = arm1_base
-4 = arm2_base
+```yaml
+fatal_no_udp_timeout_sec: 300.0
 ```
 
-默认含义：
+### 9.4 request/selected 行为
+
+```yaml
+request_timeout_sec: 0.0
+default_max_frame_age_sec: 0.20
+publish_period_ms: 50
+```
+
+含义：
 
 ```text
-0~5 KFS -> 默认 control 是 arm2_base
-100~102 武器头 -> 默认 control 是 arm1_base
-200 二维码 -> 默认 control 是 robot_base
+request_timeout_sec=0：一直保留最新 request，直到上层发新的。
+default_max_frame_age_sec：selected 最多使用多旧的 frame。
+publish_period_ms：收到 request 后周期发布 selected 状态，即使没有新 frame 也会发布 stale/no-frame 状态。
 ```
 
 ---
 
-## 11. 没有硬件怎么测试
+## 10. 小白使用流程
 
-### 11.1 编译
+### 10.1 编译
 
 ```bash
 cd ~/gmk_ws
@@ -727,34 +540,34 @@ colcon build --packages-select techx_vision_bridge
 source install/setup.bash
 ```
 
-### 11.2 检查配置
+### 10.2 检查配置
 
 ```bash
-ros2 run techx_vision_bridge check_vision_bridge_config.py \
+python3 src/techx_vision_bridge/tools/check_vision_bridge_config.py \
   --config src/techx_vision_bridge/config/vision_bridge.yaml
 ```
 
-### 11.3 启动一个节点
+### 10.3 启动 GMK 视觉包
 
 ```bash
 ros2 launch techx_vision_bridge vision_bridge.launch.py
 ```
 
-### 11.4 模拟 Jetson 发数据
+### 10.4 没有 Jetson 时，用 mock 测试
 
 ```bash
 ros2 run techx_vision_bridge mock_jetson_sender.py --mode mixed --ip 127.0.0.1
 ```
 
-### 11.5 看完整视觉帧
+看完整帧：
 
 ```bash
 ros2 topic echo /techx/vision/frame
 ```
 
-### 11.6 发请求并看对应结果
+### 10.5 请求一个目标
 
-发请求：
+请求二维码：
 
 ```bash
 ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{
@@ -776,111 +589,129 @@ ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionReques
 ros2 topic echo /techx/vision/selected
 ```
 
-如果正常，会看到：
-
-```text
-status: 0
-has_match: true
-target.class_id: 200
-```
-
 ---
 
-## 12. 外参标定结果怎么用
+## 11. 常用 request 示例
 
-标定可以在 Jetson 端采点，也可以用标定板、机械臂辅助采点。
-
-但是结果最后填这里：
-
-```yaml
-T_robot_camera_xyz_rpy: [...]
-T_arm1_robot_xyz_rpy: [...]
-T_arm2_robot_xyz_rpy: [...]
-```
-
-这个包只负责运行时使用这些外参。
-
-仓库提供工具：
+拳头武器头：
 
 ```bash
-ros2 run techx_vision_bridge estimate_extrinsic_from_points.py \
-  --csv robot_camera_points.csv \
-  --name T_robot_camera
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 1, target_type: 1, zone_id: 1, use_class_id: true, class_id: 100, use_color: false, require_control_xyz: true, min_confidence: 0.4, max_frame_age_sec: 0.2}"
 ```
 
-CSV：
+掌武器头：
 
-```csv
-from_x,from_y,from_z,to_x,to_y,to_z
-0.10,0.02,0.80,0.80,-0.10,0.25
+```bash
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 2, target_type: 1, zone_id: 1, use_class_id: true, class_id: 101, use_color: false, require_control_xyz: true, min_confidence: 0.4, max_frame_age_sec: 0.2}"
 ```
 
-对于 `T_robot_camera`：
+矛头武器头：
 
-```text
-from = camera_link 点
-to = robot_base 点
+```bash
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 3, target_type: 1, zone_id: 1, use_class_id: true, class_id: 102, use_color: false, require_control_xyz: true, min_confidence: 0.4, max_frame_age_sec: 0.2}"
 ```
 
-工具输出的 YAML 数组手动复制到 `vision_bridge.yaml`。
+红方 R2 真 KFS：
 
----
-
-## 13. 实车使用安全检查
-
-拿 `/selected` 控制前必须检查：
-
-```text
-status == 0
-has_match == true
-frame_age_sec < 0.2
-target.confidence 足够高
+```bash
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 4, target_type: 2, zone_id: 2, use_class_id: true, class_id: 2, use_color: false, require_control_xyz: true, min_confidence: 0.4, max_frame_age_sec: 0.2}"
 ```
 
-如果用三维控制，还要检查：
+蓝方 R2 真 KFS：
 
-```text
-target.valid_control_xyz == true
+```bash
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 5, target_type: 2, zone_id: 2, use_class_id: true, class_id: 5, use_color: false, require_control_xyz: true, min_confidence: 0.4, max_frame_age_sec: 0.2}"
 ```
 
-建议决策包再做：
+二维码：
 
-```text
-连续 3~5 帧稳定
-坐标不能突然跳变
-视觉断流立即停止视觉闭环动作
+```bash
+ros2 topic pub --once /techx/vision/request techx_vision_bridge/msg/VisionRequest "{request_seq: 6, target_type: 3, zone_id: 3, use_class_id: true, class_id: 200, use_color: false, require_control_xyz: false, min_confidence: 0.3, max_frame_age_sec: 0.2}"
 ```
 
 ---
 
-## 14. 小白最短使用流程
+## 12. 手眼/外参标定怎么配合
+
+标定采集建议在 Jetson 端做，因为 Jetson 能拿到相机图像、深度和 camera_link 点。最终标定结果手动填写到 GMK 的 `vision_bridge.yaml`。
+
+流程：
 
 ```text
-1. colcon build 编译。
-2. 跑 check_vision_bridge_config.py 检查配置。
-3. ros2 launch 启动 vision_bridge_node。
-4. 用 mock_jetson_sender.py 模拟 Jetson。
-5. echo /techx/vision/frame 确认有完整帧。
-6. 发布 /techx/vision/request 请求目标。
-7. echo /techx/vision/selected 看对应结果。
-8. 接真实 Jetson。
-9. 填真实外参。
-10. 决策包根据 /selected 或 /frame 生成控制命令。
+1. Jetson UI 或标定工具采集 camera_link 点。
+2. 人工测量、机械臂或底盘提供同一点在 robot_base/arm_base 下的坐标。
+3. 用多点拟合工具求 T_robot_camera 或其他外参。
+4. 把 [x,y,z,roll,pitch,yaw] 填到 GMK 的 vision_bridge.yaml。
+5. 重启 GMK vision_bridge_node。
+6. 看 /techx/vision/frame 中 robot_x/arm1_x/arm2_x 是否合理。
+```
+
+GMK 端也安装了外参估计脚本，可直接运行：
+
+```bash
+ros2 run techx_vision_bridge estimate_extrinsic_from_points.py --csv robot_camera_points.csv --name T_robot_camera
 ```
 
 ---
 
-## 15. 最容易用错的地方
+## 13. 稳定性和安全要求
+
+决策包或通讯包在使用视觉数据前必须检查：
 
 ```text
-1. 现在只有一个运行节点 vision_bridge_node，不要再找 vision_selector_node。
-2. /request 是筛选请求，不是让 Jetson 改识别模型。
-3. /selected 是 request 对应结果，/frame 是完整事实。
-4. 底盘用 robot_x/y/z。
-5. 机械臂1用 arm1_x/y/z。
-6. 机械臂2用 arm2_x/y/z。
-7. control_x/y/z 要先看 control_frame。
-8. 没有有效 z 时不要做三维控制。
-9. 外参最终填 GMK 的 vision_bridge.yaml。
-10. 通讯包一般只执行决策包命令，不建议直接替代决策包。
+/selected.status == 0
+/selected.has_match == true
+需要三维控制时 target.valid_control_xyz == true
+frame_age_sec 不要太大
+confidence 过阈值
+目标坐标不要突然跳变
+最好连续 3~5 帧稳定再动作
+```
+
+如果 `/selected.status=4`，说明视觉帧太旧，不要继续控制。
+
+如果 GMK 10 分钟收不到 Jetson UDP，会自动 shutdown。上层可以用 systemd、ros launch 或人工方式重启。
+
+---
+
+## 14. 新增识别物体怎么扩展
+
+1. Jetson 给新目标分配新的全局 `class_id` 或范围，例如 `150~159`。
+2. GMK `vision_bridge.yaml` 添加规则：
+
+```yaml
+class_rules:
+  - "150-159:10:10:2:0.0"
+```
+
+3. 决策包发布对应 request：
+
+```text
+target_type=10
+zone_id=10
+```
+
+或者精确指定：
+
+```text
+use_class_id=true
+class_id=150
+```
+
+不需要改 UDP 协议，也不需要让下游包自己解析 Jetson 数据。
+
+---
+
+## 15. 最终记忆版
+
+```text
+这个包只有一个节点：vision_bridge_node。
+它收 Jetson UDP，也收 /techx/vision/request。
+它发完整 /techx/vision/frame，也发请求结果 /techx/vision/selected。
+想要什么目标，就发对应 class_id 的 request。
+底盘用 robot_x/y/z。
+机械臂1用 arm1_x/y/z。
+机械臂2用 arm2_x/y/z。
+外参结果填 vision_bridge.yaml。
+长时间收不到 Jetson 数据会自动退出。
 ```
