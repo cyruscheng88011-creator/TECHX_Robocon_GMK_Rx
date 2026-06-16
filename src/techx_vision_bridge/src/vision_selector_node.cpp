@@ -29,6 +29,7 @@ class VisionSelectorNode : public rclcpp::Node {
     declare_parameter("qos_depth", 5);
     declare_parameter("request_timeout_sec", 0.0);
     declare_parameter("default_max_frame_age_sec", 0.20);
+    declare_parameter("publish_period_ms", 50);
 
     request_timeout_sec_ = get_parameter("request_timeout_sec").as_double();
     default_max_frame_age_sec_ = get_parameter("default_max_frame_age_sec").as_double();
@@ -52,11 +53,14 @@ class VisionSelectorNode : public rclcpp::Node {
         get_parameter("request_topic_name").as_string(), qos,
         std::bind(&VisionSelectorNode::on_request, this, std::placeholders::_1));
 
-    RCLCPP_INFO(get_logger(), "vision selector ready frame=%s request=%s selected=%s qos=%s",
+    const int period_ms = std::max(10, static_cast<int>(get_parameter("publish_period_ms").as_int()));
+    status_timer_ = create_wall_timer(std::chrono::milliseconds(period_ms), std::bind(&VisionSelectorNode::publish_selection, this));
+
+    RCLCPP_INFO(get_logger(), "vision selector ready frame=%s request=%s selected=%s qos=%s period=%dms",
                 get_parameter("frame_topic_name").as_string().c_str(),
                 get_parameter("request_topic_name").as_string().c_str(),
                 get_parameter("selected_topic_name").as_string().c_str(),
-                reliable ? "reliable" : "best_effort");
+                reliable ? "reliable" : "best_effort", period_ms);
   }
 
  private:
@@ -86,8 +90,8 @@ class VisionSelectorNode : public rclcpp::Node {
 
   bool matches_request(const techx_vision_bridge::msg::VisionObject &obj) const {
     if (!has_request_) return false;
-    if (latest_request_.target_type != 0 && obj.target_type != latest_request_.target_type) return false;
-    if (latest_request_.zone_id != 0 && obj.zone_id != latest_request_.zone_id) return false;
+    if (latest_request_.target_type != techx_vision_bridge::msg::VisionRequest::TYPE_ANY && obj.target_type != latest_request_.target_type) return false;
+    if (latest_request_.zone_id != techx_vision_bridge::msg::VisionRequest::ZONE_ANY && obj.zone_id != latest_request_.zone_id) return false;
     if (latest_request_.use_class_id && obj.class_id != latest_request_.class_id) return false;
     if (latest_request_.use_color && obj.color != latest_request_.color) return false;
     if (latest_request_.require_control_xyz && !obj.valid_control_xyz) return false;
@@ -175,6 +179,7 @@ class VisionSelectorNode : public rclcpp::Node {
   rclcpp::Publisher<techx_vision_bridge::msg::VisionSelection>::SharedPtr selected_pub_;
   rclcpp::Subscription<techx_vision_bridge::msg::VisionFrame>::SharedPtr frame_sub_;
   rclcpp::Subscription<techx_vision_bridge::msg::VisionRequest>::SharedPtr request_sub_;
+  rclcpp::TimerBase::SharedPtr status_timer_;
 };
 
 int main(int argc, char **argv) {
