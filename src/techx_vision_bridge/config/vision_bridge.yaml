@@ -20,4 +20,13 @@ vision_bridge_node:
     head_class_max: 149
     qr_class_id: 200
 
+    # Fixed extrinsics. Each list is [x, y, z, roll, pitch, yaw] in meters/radians.
+    # T_robot_camera: point_robot = R * point_camera + t
+    # T_arm1_robot:  point_arm1  = R * point_robot  + t
+    # T_arm2_robot:  point_arm2  = R * point_robot  + t
+    enable_transforms: true
+    T_robot_camera_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    T_arm1_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    T_arm2_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
     watchdog_timeout_sec: 0.3
