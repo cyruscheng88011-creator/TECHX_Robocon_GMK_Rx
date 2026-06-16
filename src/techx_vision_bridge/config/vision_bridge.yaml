@@ -8,10 +8,13 @@ vision_bridge_node:
     detail_topic_name: "/techx/vision/kfs_targets"
     topic_name: "/techx/vision/targets"
 
+    # Canonical outputs are /techx/vision/frame and /techx/vision/selected.
+    # Keep object stream for debugging. Legacy single-target topics are off by
+    # default to prevent old nodes from accidentally consuming partial data.
     publish_frame_topic: true
     publish_object_topic: true
-    publish_detail_topic: true
-    publish_legacy_topic: true
+    publish_detail_topic: false
+    publish_legacy_topic: false
     accept_legacy: false
 
     # Use reliable QoS by default so normal decision/navigation subscribers
