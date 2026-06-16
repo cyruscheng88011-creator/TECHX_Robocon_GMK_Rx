@@ -5,16 +5,21 @@
 #   arm1_base    : arm 1 base frame after T_arm1_robot.
 #   arm2_base    : arm 2 base frame after T_arm2_robot.
 # control_x/y/z are the recommended coordinates for the object's consumer.
+# New object types can use custom numeric target_type/zone_id values configured
+# in vision_bridge.yaml class_rules. Existing consumers should always filter by
+# target_type/class_id instead of relying on receive order.
 
 uint8 ZONE_UNKNOWN=0
 uint8 ZONE_WEAPON_HEAD=1
 uint8 ZONE_KFS=2
 uint8 ZONE_QR=3
+uint8 ZONE_CUSTOM=10
 
 uint8 TYPE_UNKNOWN=0
 uint8 TYPE_WEAPON_HEAD=1
 uint8 TYPE_KFS=2
 uint8 TYPE_QR=3
+uint8 TYPE_CUSTOM=10
 
 uint8 COLOR_UNKNOWN=0
 uint8 COLOR_RED=1
