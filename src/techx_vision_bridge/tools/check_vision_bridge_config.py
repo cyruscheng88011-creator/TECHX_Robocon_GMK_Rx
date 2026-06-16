@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Static checker for the GMK techx_vision_bridge YAML config.
 
-This does not require ROS 2 runtime or hardware. It only checks the package
-configuration contract used by Jetson, GMK bridge, selector and decision nodes.
+This does not require ROS 2 runtime or hardware. It checks the single-node
+competition contract:
+
+    vision_bridge_node receives Jetson UDP V2, publishes /frame,
+    subscribes /request, and publishes /selected.
 """
 
 from __future__ import annotations
@@ -11,7 +14,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 REQUIRED_CLASS_IDS = {
     0: "kfs_red_r1",
@@ -53,8 +56,15 @@ def scalar_value(text: str, key: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+def require_key(text: str, key: str) -> bool:
+    if scalar_value(text, key) is None:
+        print(f"[ERROR] missing {key}")
+        return False
+    return True
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check GMK vision bridge config without ROS/hardware")
+    parser = argparse.ArgumentParser(description="Check GMK single-node vision bridge config without ROS/hardware")
     parser.add_argument("--config", default="src/techx_vision_bridge/config/vision_bridge.yaml")
     args = parser.parse_args()
 
@@ -64,9 +74,20 @@ def main() -> int:
     if "vision_bridge_node:" not in text:
         print("[ERROR] missing top-level vision_bridge_node")
         errors += 1
-    if "vision_selector_node:" not in text:
-        print("[ERROR] missing top-level vision_selector_node")
+    if "vision_selector_node:" in text:
+        print("[ERROR] vision_selector_node should not be a separate top-level node in the simplified single-node design")
         errors += 1
+
+    for key in (
+        "udp_bind_addr",
+        "udp_port",
+        "frame_topic_name",
+        "request_topic_name",
+        "selected_topic_name",
+        "enable_request_selector",
+    ):
+        if not require_key(text, key):
+            errors += 1
 
     rules = read_rules(text)
     if not rules:
@@ -90,6 +111,9 @@ def main() -> int:
         elif value.lower() != "false":
             print(f"[WARN] {key} is {value}; canonical competition path should keep legacy/detail topics off by default")
 
+    if scalar_value(text, "enable_request_selector") not in ("true", "True"):
+        print("[WARN] enable_request_selector is not true; /request -> /selected will be disabled")
+
     for key in ("T_robot_camera_xyz_rpy", "T_arm1_robot_xyz_rpy", "T_arm2_robot_xyz_rpy"):
         if scalar_value(text, key) is None:
             print(f"[ERROR] missing {key}")
@@ -98,7 +122,7 @@ def main() -> int:
     if errors:
         print(f"FAILED: {errors} error(s)")
         return 1
-    print("OK: GMK vision bridge config matches the competition communication contract")
+    print("OK: GMK single-node vision bridge config matches the competition communication contract")
     return 0
 
 
