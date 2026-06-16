@@ -17,6 +17,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Target3D.msg"
   "msg/VisionTarget.msg"
+  "msg/VisionObject.msg"
+  "msg/VisionFrame.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 
@@ -43,6 +45,11 @@ target_link_libraries(vision_bridge_node Threads::Threads)
 
 install(TARGETS
   vision_bridge_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  tools/mock_jetson_sender.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
