@@ -2,10 +2,24 @@ techx_vision_bridge:
   ros__parameters:
     udp_bind_addr: "0.0.0.0"
     udp_port: 12345
-    topic_name: "/techx/vision/targets"
+
+    frame_topic_name: "/techx/vision/frame"
+    object_topic_name: "/techx/vision/objects"
     detail_topic_name: "/techx/vision/kfs_targets"
+    topic_name: "/techx/vision/targets"
+
+    publish_frame_topic: true
+    publish_object_topic: true
+    publish_detail_topic: true
     publish_legacy_topic: true
-    accept_legacy: true
+    accept_legacy: false
+
+    image_width: 640.0
+    image_height: 480.0
+    weapon_class_min: 100
+    weapon_class_max: 149
+    qr_class_id: 200
+
     reconnect_timeout_sec: 3.0
     watchdog_timeout_sec: 0.3
     thread_nice: 10
