@@ -39,7 +39,6 @@ constexpr uint8_t TYPE_HEAD = 1;
 constexpr uint8_t TYPE_KFS = 2;
 constexpr uint8_t TYPE_QR = 3;
 
-constexpr uint8_t FRAME_UNKNOWN = 0;
 constexpr uint8_t FRAME_CAMERA_LINK = 1;
 constexpr uint8_t FRAME_ROBOT_BASE = 2;
 constexpr uint8_t FRAME_ARM1_BASE = 3;
@@ -252,8 +251,8 @@ ClassRule make_rule(int lo, int hi, uint8_t zone, uint8_t type, uint8_t frame, f
 
 std::vector<ClassRule> default_rules() {
   return {
-      make_rule(0, 4, ZONE_KFS, TYPE_KFS, FRAME_ARM2_BASE, 0.0f),
-      make_rule(100, 149, ZONE_HEAD, TYPE_HEAD, FRAME_ARM1_BASE, 0.0f),
+      make_rule(0, 5, ZONE_KFS, TYPE_KFS, FRAME_ARM2_BASE, 0.0f),
+      make_rule(100, 102, ZONE_HEAD, TYPE_HEAD, FRAME_ARM1_BASE, 0.0f),
       make_rule(200, 200, ZONE_QR, TYPE_QR, FRAME_ROBOT_BASE, 0.0f),
   };
 }
@@ -298,16 +297,16 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter("topic_name", "/techx/vision/targets");
     declare_parameter("publish_frame_topic", true);
     declare_parameter("publish_object_topic", true);
-    declare_parameter("publish_detail_topic", true);
-    declare_parameter("publish_legacy_topic", true);
+    declare_parameter("publish_detail_topic", false);
+    declare_parameter("publish_legacy_topic", false);
     declare_parameter("accept_legacy", false);
     declare_parameter("reliable_qos", true);
     declare_parameter("qos_depth", 5);
     declare_parameter("image_width", 640.0);
     declare_parameter("image_height", 480.0);
     declare_parameter<std::vector<std::string>>("class_rules", {
-        "0-4:2:2:4:0.0",
-        "100-149:1:1:3:0.0",
+        "0-5:2:2:4:0.0",
+        "100-102:1:1:3:0.0",
         "200:3:3:2:0.0",
     });
     declare_parameter("enable_transforms", true);
@@ -731,17 +730,17 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   int udp_port_{12345};
   bool publish_frame_{true};
   bool publish_object_{true};
-  bool publish_detail_{true};
-  bool publish_legacy_{true};
+  bool publish_detail_{false};
+  bool publish_legacy_{false};
   bool accept_legacy_{false};
-  bool enable_transforms_{true};
   double image_width_{640.0};
   double image_height_{480.0};
+  std::vector<ClassRule> class_rules_{default_rules()};
+  bool enable_transforms_{true};
+  Transform tf_robot_camera_{};
+  Transform tf_arm1_robot_{};
+  Transform tf_arm2_robot_{};
   double watchdog_timeout_sec_{0.3};
-  std::vector<ClassRule> class_rules_;
-  Transform tf_robot_camera_;
-  Transform tf_arm1_robot_;
-  Transform tf_arm2_robot_;
   bool v2_seq_init_{false};
   bool legacy_seq_init_{false};
   bool v2_seen_{false};
