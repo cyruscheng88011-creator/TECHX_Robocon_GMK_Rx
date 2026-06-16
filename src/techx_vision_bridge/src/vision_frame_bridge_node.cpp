@@ -6,6 +6,7 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -97,6 +98,15 @@ struct Transform {
   Vec3 t{};
 };
 
+struct ClassRule {
+  int min_id{0};
+  int max_id{0};
+  uint8_t zone_id{ZONE_UNKNOWN};
+  uint8_t target_type{TYPE_UNKNOWN};
+  uint8_t control_frame{FRAME_CAMERA_LINK};
+  float priority_bias{0.0f};
+};
+
 struct DecodedTarget {
   uint8_t track_id{0};
   uint8_t class_id{255};
@@ -126,7 +136,7 @@ struct DecodedTarget {
 
   uint8_t zone_id{ZONE_UNKNOWN};
   uint8_t target_type{TYPE_UNKNOWN};
-  uint8_t control_frame{FRAME_UNKNOWN};
+  uint8_t control_frame{FRAME_CAMERA_LINK};
   bool valid_control_xyz{false};
   float control_x{0.0f};
   float control_y{0.0f};
@@ -135,6 +145,7 @@ struct DecodedTarget {
   float align_err_x{0.0f};
   float align_err_y{0.0f};
   float priority{0.0f};
+  float priority_bias{0.0f};
 };
 
 struct DecodedFrame {
@@ -198,6 +209,82 @@ Vec3 apply_transform(const Transform &tf, const Vec3 &p) {
       tf.r[2][0] * p.x + tf.r[2][1] * p.y + tf.r[2][2] * p.z + tf.t.z,
   };
 }
+
+std::vector<std::string> split(const std::string &s, char sep) {
+  std::vector<std::string> out;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, sep)) {
+    out.push_back(item);
+  }
+  return out;
+}
+
+bool parse_range(const std::string &s, int &lo, int &hi) {
+  auto parts = split(s, '-');
+  try {
+    if (parts.size() == 1) {
+      lo = hi = std::stoi(parts[0]);
+      return true;
+    }
+    if (parts.size() == 2) {
+      lo = std::stoi(parts[0]);
+      hi = std::stoi(parts[1]);
+      if (hi < lo) std::swap(lo, hi);
+      return true;
+    }
+  } catch (...) {
+    return false;
+  }
+  return false;
+}
+
+ClassRule make_rule(int lo, int hi, uint8_t zone, uint8_t type, uint8_t frame, float bias = 0.0f) {
+  ClassRule r;
+  r.min_id = lo;
+  r.max_id = hi;
+  r.zone_id = zone;
+  r.target_type = type;
+  r.control_frame = frame;
+  r.priority_bias = bias;
+  return r;
+}
+
+std::vector<ClassRule> default_rules() {
+  return {
+      make_rule(0, 4, ZONE_KFS, TYPE_KFS, FRAME_ARM2_BASE, 0.0f),
+      make_rule(100, 149, ZONE_HEAD, TYPE_HEAD, FRAME_ARM1_BASE, 0.0f),
+      make_rule(200, 200, ZONE_QR, TYPE_QR, FRAME_ROBOT_BASE, 0.0f),
+  };
+}
+
+std::vector<ClassRule> parse_rules(const std::vector<std::string> &raw) {
+  std::vector<ClassRule> rules;
+  for (const auto &line : raw) {
+    auto parts = split(line, ':');
+    if (parts.size() < 4) {
+      continue;
+    }
+    int lo = 0;
+    int hi = 0;
+    if (!parse_range(parts[0], lo, hi)) {
+      continue;
+    }
+    try {
+      const auto zone = static_cast<uint8_t>(std::stoi(parts[1]));
+      const auto type = static_cast<uint8_t>(std::stoi(parts[2]));
+      const auto frame = static_cast<uint8_t>(std::stoi(parts[3]));
+      const float bias = parts.size() >= 5 ? std::stof(parts[4]) : 0.0f;
+      rules.push_back(make_rule(lo, hi, zone, type, frame, bias));
+    } catch (...) {
+      continue;
+    }
+  }
+  if (rules.empty()) {
+    return default_rules();
+  }
+  return rules;
+}
 }  // namespace
 
 class VisionFrameBridgeNode : public rclcpp::Node {
@@ -214,11 +301,15 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter("publish_detail_topic", true);
     declare_parameter("publish_legacy_topic", true);
     declare_parameter("accept_legacy", false);
+    declare_parameter("reliable_qos", true);
+    declare_parameter("qos_depth", 5);
     declare_parameter("image_width", 640.0);
     declare_parameter("image_height", 480.0);
-    declare_parameter("head_class_min", 100);
-    declare_parameter("head_class_max", 149);
-    declare_parameter("qr_class_id", 200);
+    declare_parameter<std::vector<std::string>>("class_rules", {
+        "0-4:2:2:4:0.0",
+        "100-149:1:1:3:0.0",
+        "200:3:3:2:0.0",
+    });
     declare_parameter("enable_transforms", true);
     declare_parameter<std::vector<double>>("T_robot_camera_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     declare_parameter<std::vector<double>>("T_arm1_robot_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -234,16 +325,23 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     accept_legacy_ = get_parameter("accept_legacy").as_bool();
     image_width_ = get_parameter("image_width").as_double();
     image_height_ = get_parameter("image_height").as_double();
-    head_class_min_ = get_parameter("head_class_min").as_int();
-    head_class_max_ = get_parameter("head_class_max").as_int();
-    qr_class_id_ = get_parameter("qr_class_id").as_int();
+    class_rules_ = parse_rules(get_parameter("class_rules").as_string_array());
     enable_transforms_ = get_parameter("enable_transforms").as_bool();
     tf_robot_camera_ = make_transform_from_xyz_rpy(get_parameter("T_robot_camera_xyz_rpy").as_double_array());
     tf_arm1_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm1_robot_xyz_rpy").as_double_array());
     tf_arm2_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm2_robot_xyz_rpy").as_double_array());
     watchdog_timeout_sec_ = get_parameter("watchdog_timeout_sec").as_double();
 
-    auto qos = rclcpp::SensorDataQoS();
+    const bool reliable = get_parameter("reliable_qos").as_bool();
+    const int depth = std::max(1, static_cast<int>(get_parameter("qos_depth").as_int()));
+    auto qos = rclcpp::QoS(rclcpp::KeepLast(depth));
+    if (reliable) {
+      qos.reliable();
+    } else {
+      qos.best_effort();
+    }
+    qos.durability_volatile();
+
     frame_pub_ = create_publisher<techx_vision_bridge::msg::VisionFrame>(get_parameter("frame_topic_name").as_string(), qos);
     object_pub_ = create_publisher<techx_vision_bridge::msg::VisionObject>(get_parameter("object_topic_name").as_string(), qos);
     detail_pub_ = create_publisher<techx_vision_bridge::msg::VisionTarget>(get_parameter("detail_topic_name").as_string(), qos);
@@ -253,7 +351,9 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     recv_timer_ = create_wall_timer(std::chrono::milliseconds(2), std::bind(&VisionFrameBridgeNode::recv_once, this));
     watchdog_timer_ = create_wall_timer(std::chrono::milliseconds(200), std::bind(&VisionFrameBridgeNode::watchdog, this));
     last_valid_ = std::chrono::steady_clock::now();
-    RCLCPP_INFO(get_logger(), "vision bridge ready udp=%s:%d accept_legacy=%s transforms=%s", bind_addr_.c_str(), udp_port_, accept_legacy_ ? "true" : "false", enable_transforms_ ? "true" : "false");
+    RCLCPP_INFO(get_logger(), "vision bridge ready udp=%s:%d accept_legacy=%s transforms=%s qos=%s rules=%zu",
+                bind_addr_.c_str(), udp_port_, accept_legacy_ ? "true" : "false",
+                enable_transforms_ ? "true" : "false", reliable ? "reliable" : "best_effort", class_rules_.size());
   }
 
   ~VisionFrameBridgeNode() override {
@@ -423,17 +523,24 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     return true;
   }
 
-  void enrich(DecodedTarget &t) {
-    if (t.class_id <= 4) {
-      t.zone_id = ZONE_KFS;
-      t.target_type = TYPE_KFS;
-    } else if (t.class_id == static_cast<uint8_t>(qr_class_id_)) {
-      t.zone_id = ZONE_QR;
-      t.target_type = TYPE_QR;
-    } else if (t.class_id >= static_cast<uint8_t>(head_class_min_) && t.class_id <= static_cast<uint8_t>(head_class_max_)) {
-      t.zone_id = ZONE_HEAD;
-      t.target_type = TYPE_HEAD;
+  void apply_class_rule(DecodedTarget &t) const {
+    const int cid = static_cast<int>(t.class_id);
+    for (const auto &rule : class_rules_) {
+      if (cid >= rule.min_id && cid <= rule.max_id) {
+        t.zone_id = rule.zone_id;
+        t.target_type = rule.target_type;
+        t.control_frame = rule.control_frame;
+        t.priority_bias = rule.priority_bias;
+        return;
+      }
     }
+    t.zone_id = ZONE_UNKNOWN;
+    t.target_type = TYPE_UNKNOWN;
+    t.control_frame = FRAME_CAMERA_LINK;
+  }
+
+  void enrich(DecodedTarget &t) {
+    apply_class_rule(t);
 
     if (image_width_ > 1.0 && image_height_ > 1.0 && std::isfinite(t.u) && std::isfinite(t.v)) {
       const double cx = image_width_ * 0.5;
@@ -445,6 +552,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     fill_transformed_coordinates(t);
 
     float score = std::isfinite(t.confidence) ? t.confidence : 0.0f;
+    score += t.priority_bias;
     score -= 0.15f * std::fabs(t.align_err_x);
     score -= 0.10f * std::fabs(t.align_err_y);
     if (t.valid_control_xyz) score += 0.05f * std::max(0.0f, 2.0f - t.control_z);
@@ -452,7 +560,6 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   }
 
   void fill_transformed_coordinates(DecodedTarget &t) const {
-    t.control_frame = preferred_frame(t.target_type);
     if (!t.valid_xyz) {
       return;
     }
@@ -499,13 +606,6 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     t.control_x = static_cast<float>(control.x);
     t.control_y = static_cast<float>(control.y);
     t.control_z = static_cast<float>(control.z);
-  }
-
-  uint8_t preferred_frame(uint8_t target_type) const {
-    if (target_type == TYPE_HEAD) return FRAME_ARM1_BASE;
-    if (target_type == TYPE_KFS) return FRAME_ARM2_BASE;
-    if (target_type == TYPE_QR) return FRAME_ROBOT_BASE;
-    return FRAME_CAMERA_LINK;
   }
 
   rclcpp::Time stamp(const DecodedFrame &frame) const {
@@ -637,10 +737,8 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   bool enable_transforms_{true};
   double image_width_{640.0};
   double image_height_{480.0};
-  int head_class_min_{100};
-  int head_class_max_{149};
-  int qr_class_id_{200};
   double watchdog_timeout_sec_{0.3};
+  std::vector<ClassRule> class_rules_;
   Transform tf_robot_camera_;
   Transform tf_arm1_robot_;
   Transform tf_arm2_robot_;
