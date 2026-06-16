@@ -20,9 +20,4 @@ vision_bridge_node:
     head_class_max: 149
     qr_class_id: 200
 
-    reconnect_timeout_sec: 3.0
     watchdog_timeout_sec: 0.3
-    thread_nice: 10
-    timestamp_mode: "local"
-    min_valid_timestamp: 1500000000.0
-    max_future_sec: 3600.0
