@@ -7,17 +7,25 @@ vision_bridge_node:
     object_topic_name: "/techx/vision/objects"
     detail_topic_name: "/techx/vision/kfs_targets"
     topic_name: "/techx/vision/targets"
+    request_topic_name: "/techx/vision/request"
+    selected_topic_name: "/techx/vision/selected"
 
     publish_frame_topic: true
     publish_object_topic: true
     publish_detail_topic: true
     publish_legacy_topic: true
+    publish_selected_topic: true
     accept_legacy: false
 
     # Use reliable QoS by default so normal decision/navigation subscribers
     # can receive data without using SensorDataQoS explicitly.
     reliable_qos: true
     qos_depth: 5
+
+    # If a decision request is older than this, selected output stops.
+    # Set to 0.0 to keep the latest request forever.
+    request_timeout_sec: 0.0
+    default_max_frame_age_sec: 0.20
 
     image_width: 640.0
     image_height: 480.0
