@@ -2,13 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>techx_vision_bridge</name>
-  <version>2.0.0</version>
+  <version>2.1.0</version>
   <description>
-    GMK M6 视觉数据 UDP→ROS2 桥接功能包（C++ 实现）。
-    从以太网口接收上游视觉系统的 UDP 数据包，经五重防爆校验后，
-    转化为自定义 Target3D 消息发布至 /techx/vision/targets 话题。
-    采用独立 std::thread 阻塞式接收 + 线程安全消息队列架构，
-    追求 0ms 响应抖动。
+    TECHX Robocon GMK vision bridge. Receives Jetson UDP vision frames and publishes ROS 2 frame/object topics for navigation, decision and low-level communication packages.
   </description>
   <maintainer email="techx@example.com">TechX Robotics</maintainer>
   <license>MIT</license>
