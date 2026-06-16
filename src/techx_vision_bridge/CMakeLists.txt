@@ -19,6 +19,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/VisionTarget.msg"
   "msg/VisionObject.msg"
   "msg/VisionFrame.msg"
+  "msg/VisionRequest.msg"
+  "msg/VisionSelection.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 
