@@ -16,8 +16,10 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <syslog.h>
 #include <unistd.h>
 
+#include "rcutils/logging.h"
 #include "rclcpp/rclcpp.hpp"
 #include "techx_vision_bridge/msg/target3_d.hpp"
 #include "techx_vision_bridge/msg/vision_frame.hpp"
@@ -290,6 +292,8 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     last_valid_ = std::chrono::steady_clock::now();
     recv_timer_ = create_wall_timer(std::chrono::milliseconds(2), std::bind(&VisionFrameBridgeNode::recv_once, this));
     watchdog_timer_ = create_wall_timer(std::chrono::milliseconds(200), std::bind(&VisionFrameBridgeNode::watchdog, this));
+    stats_timer_ = create_wall_timer(std::chrono::seconds(10), std::bind(&VisionFrameBridgeNode::log_stats, this));
+    stats_reset_time_ = std::chrono::steady_clock::now();
     RCLCPP_INFO(get_logger(),
                 "vision bridge ready udp=%s:%d accept_legacy=%s transforms=%s selector=%s fatal_no_udp=%.1fs rules=%zu",
                 bind_addr_.c_str(), udp_port_, accept_legacy_ ? "true" : "false",
@@ -425,9 +429,22 @@ class VisionFrameBridgeNode : public rclcpp::Node {
       if (decode(buf, static_cast<size_t>(n), frame) && prefer(frame, best, has_best)) {
         best = std::move(frame);
         has_best = true;
+      } else {
+        ++decode_failures_;
       }
     }
     if (has_best) {
+      if (!first_frame_received_) {
+        first_frame_received_ = true;
+        RCLCPP_INFO(get_logger(), "first UDP frame received: seq=%u targets=%zu protocol=V%d",
+                    best.seq, best.targets.size(), best.protocol_version);
+      } else if (udp_lost_marker_) {
+        udp_lost_marker_ = false;
+        RCLCPP_INFO(get_logger(), "UDP resumed: seq=%u targets=%zu",
+                    best.seq, best.targets.size());
+      }
+      ++frames_received_;
+      targets_received_ += best.targets.size();
       last_valid_ = std::chrono::steady_clock::now();
       publish(best);
     }
@@ -717,6 +734,9 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     latest_request_ = *msg;
     request_recv_time_ = std::chrono::steady_clock::now();
     has_request_ = true;
+    RCLCPP_INFO(get_logger(), "request received: seq=%d class_id=%d target_type=%d zone_id=%d require_xyz=%s",
+                msg->request_seq, msg->class_id, msg->target_type, msg->zone_id,
+                msg->require_control_xyz ? "true" : "false");
     publish_selection();
   }
 
@@ -777,37 +797,49 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   void publish_selection() {
     if (!enable_request_selector_ || !selected_pub_) return;
     if (!has_request_) return;
+    uint8_t status = techx_vision_bridge::msg::VisionSelection::STATUS_NO_REQUEST;
     if (request_expired()) {
-      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_REQUEST_STALE));
+      status = techx_vision_bridge::msg::VisionSelection::STATUS_REQUEST_STALE;
+      selected_pub_->publish(base_selection(status));
       has_request_ = false;
-      return;
+    } else if (!has_frame_) {
+      status = techx_vision_bridge::msg::VisionSelection::STATUS_NO_FRAME;
+      selected_pub_->publish(base_selection(status));
+    } else {
+      const float max_age = latest_request_.max_frame_age_sec > 0.0f ? latest_request_.max_frame_age_sec : static_cast<float>(default_max_frame_age_sec_);
+      if (max_age > 0.0f && frame_age_sec() > max_age) {
+        status = techx_vision_bridge::msg::VisionSelection::STATUS_FRAME_STALE;
+        selected_pub_->publish(base_selection(status));
+      } else {
+        size_t best_index = 0;
+        float best_score = 0.0f;
+        if (!select_best(best_index, best_score)) {
+          status = techx_vision_bridge::msg::VisionSelection::STATUS_NO_MATCH;
+          selected_pub_->publish(base_selection(status));
+        } else {
+          status = techx_vision_bridge::msg::VisionSelection::STATUS_OK;
+          auto out = base_selection(status);
+          out.has_match = true;
+          out.selected_index = static_cast<uint8_t>(std::min<size_t>(best_index, INVALID_INDEX - 1));
+          out.score = best_score;
+          out.target = latest_frame_.targets[best_index];
+          selected_pub_->publish(out);
+        }
+      }
     }
-    if (!has_frame_) {
-      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_NO_FRAME));
-      return;
+    if (status != last_selection_status_) {
+      RCLCPP_INFO(get_logger(), "selector status %d -> %d (frame_seq=%d frame_age=%.3fs)",
+                  last_selection_status_, status,
+                  has_frame_ ? static_cast<int>(latest_frame_.seq) : 0,
+                  frame_age_sec());
+      last_selection_status_ = status;
     }
-    const float max_age = latest_request_.max_frame_age_sec > 0.0f ? latest_request_.max_frame_age_sec : static_cast<float>(default_max_frame_age_sec_);
-    if (max_age > 0.0f && frame_age_sec() > max_age) {
-      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_FRAME_STALE));
-      return;
-    }
-    size_t best_index = 0;
-    float best_score = 0.0f;
-    if (!select_best(best_index, best_score)) {
-      selected_pub_->publish(base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_NO_MATCH));
-      return;
-    }
-    auto out = base_selection(techx_vision_bridge::msg::VisionSelection::STATUS_OK);
-    out.has_match = true;
-    out.selected_index = static_cast<uint8_t>(std::min<size_t>(best_index, INVALID_INDEX - 1));
-    out.score = best_score;
-    out.target = latest_frame_.targets[best_index];
-    selected_pub_->publish(out);
   }
 
   void watchdog() {
     const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - last_valid_).count();
     if (elapsed > watchdog_timeout_sec_) {
+      udp_lost_marker_ = true;
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "vision UDP signal lost %.2fs", elapsed);
     }
     if (fatal_no_udp_timeout_sec_ > 0.0 && elapsed > fatal_no_udp_timeout_sec_) {
@@ -818,6 +850,20 @@ class VisionFrameBridgeNode : public rclcpp::Node {
       }
       rclcpp::shutdown();
     }
+  }
+
+  void log_stats() {
+    const double interval = std::chrono::duration<double>(std::chrono::steady_clock::now() - stats_reset_time_).count();
+    if (interval <= 0.0) return;
+    const double fps = static_cast<double>(frames_received_) / interval;
+    const double tps = static_cast<double>(targets_received_) / interval;
+    const double dfps = static_cast<double>(decode_failures_) / interval;
+    RCLCPP_INFO(get_logger(), "udp stats: %.1f fps %.1f tps %.1f decode_fail/s (over %.1fs)",
+                fps, tps, dfps, interval);
+    frames_received_ = 0;
+    targets_received_ = 0;
+    decode_failures_ = 0;
+    stats_reset_time_ = std::chrono::steady_clock::now();
   }
 
   int sock_{-1};
@@ -857,6 +903,15 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   techx_vision_bridge::msg::VisionFrame latest_frame_;
   techx_vision_bridge::msg::VisionRequest latest_request_;
 
+  // stats for syslog
+  bool first_frame_received_{false};
+  uint64_t frames_received_{0};
+  uint64_t decode_failures_{0};
+  uint64_t targets_received_{0};
+  uint8_t last_selection_status_{255};  // 255 = never published
+  bool udp_lost_marker_{false};
+  std::chrono::steady_clock::time_point stats_reset_time_;
+
   rclcpp::Publisher<techx_vision_bridge::msg::VisionFrame>::SharedPtr frame_pub_;
   rclcpp::Publisher<techx_vision_bridge::msg::VisionObject>::SharedPtr object_pub_;
   rclcpp::Publisher<techx_vision_bridge::msg::VisionTarget>::SharedPtr detail_pub_;
@@ -866,11 +921,46 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   rclcpp::TimerBase::SharedPtr recv_timer_;
   rclcpp::TimerBase::SharedPtr watchdog_timer_;
   rclcpp::TimerBase::SharedPtr selector_timer_;
+  rclcpp::TimerBase::SharedPtr stats_timer_;
 };
 
+// ── syslog dual-output handler ──────────────────────────────────────────
+static rcutils_logging_output_handler_t g_original_handler = nullptr;
+
+static void dual_output_handler(
+    const rcutils_log_location_t *location,
+    int severity, const char *name,
+    rcutils_time_point_value_t timestamp,
+    const char *format, va_list *args) {
+  // Forward to original ROS2 handler (console + rosout + file)
+  if (g_original_handler) {
+    g_original_handler(location, severity, name, timestamp, format, args);
+  }
+  // Also write to syslog
+  int prio;
+  switch (severity) {
+    case RCUTILS_LOG_SEVERITY_DEBUG: prio = LOG_DEBUG;   break;
+    case RCUTILS_LOG_SEVERITY_INFO:  prio = LOG_INFO;    break;
+    case RCUTILS_LOG_SEVERITY_WARN:  prio = LOG_WARNING; break;
+    case RCUTILS_LOG_SEVERITY_ERROR: prio = LOG_ERR;     break;
+    case RCUTILS_LOG_SEVERITY_FATAL: prio = LOG_CRIT;    break;
+    default:                         prio = LOG_INFO;
+  }
+  va_list args_copy;
+  va_copy(args_copy, *args);
+  vsyslog(prio, format, args_copy);
+  va_end(args_copy);
+}
+// ────────────────────────────────────────────────────────────────────────
+
 int main(int argc, char **argv) {
+  openlog("vision_bridge", LOG_PID | LOG_CONS, LOG_USER);
   rclcpp::init(argc, argv);
+  g_original_handler = rcutils_logging_get_output_handler();
+  rcutils_logging_set_output_handler(dual_output_handler);
   rclcpp::spin(std::make_shared<VisionFrameBridgeNode>());
   rclcpp::shutdown();
+  rcutils_logging_set_output_handler(g_original_handler);
+  closelog();
   return 0;
 }
