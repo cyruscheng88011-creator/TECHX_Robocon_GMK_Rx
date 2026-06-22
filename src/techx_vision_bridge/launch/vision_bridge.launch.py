@@ -2,11 +2,14 @@
 # ============================================================================
 # vision_bridge.launch.py
 # Usage: ros2 launch techx_vision_bridge vision_bridge.launch.py
-# Starts one node only:
-#   vision_bridge_node
-# The single node handles:
-#   Jetson UDP V2 -> /techx/vision/frame
-#   /techx/vision/request -> /techx/vision/selected
+# Starts two nodes:
+#   vision_bridge_node       Jetson UDP V2 -> raw ROS 2 topics
+#   calibration_guard_node   raw topics -> guarded canonical topics
+#
+# The canonical topics for decision packages are:
+#   /techx/vision/frame
+#   /techx/vision/request
+#   /techx/vision/selected
 # ============================================================================
 
 import os
@@ -27,4 +30,12 @@ def generate_launch_description():
         parameters=[config_path],
     )
 
-    return LaunchDescription([bridge_node])
+    calibration_guard_node = Node(
+        package="techx_vision_bridge",
+        executable="calibration_guard_node.py",
+        name="calibration_guard_node",
+        output="screen",
+        parameters=[config_path],
+    )
+
+    return LaunchDescription([bridge_node, calibration_guard_node])
