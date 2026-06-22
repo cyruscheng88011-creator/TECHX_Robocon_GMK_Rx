@@ -4,27 +4,28 @@ vision_bridge_node:
     udp_bind_addr: "0.0.0.0"
     udp_port: 12345
 
-    # Main ROS 2 topics.
-    # Other packages usually subscribe /techx/vision/frame.
-    # Decision packages may also publish /techx/vision/request and subscribe /techx/vision/selected.
-    frame_topic_name: "/techx/vision/frame"
-    object_topic_name: "/techx/vision/objects"
+    # Raw ROS 2 topics from the UDP decoder. Do not let decision packages consume
+    # these directly during field bring-up; use the guarded canonical topics below.
+    frame_topic_name: "/techx/vision/frame_raw"
+    object_topic_name: "/techx/vision/objects_raw"
     request_topic_name: "/techx/vision/request"
-    selected_topic_name: "/techx/vision/selected"
+    selected_topic_name: "/techx/vision/selected_raw"
 
     # Old compatibility topics. Keep off for new competition code.
     detail_topic_name: "/techx/vision/kfs_targets"
     topic_name: "/techx/vision/targets"
 
-    # Canonical outputs are /techx/vision/frame and /techx/vision/selected.
+    # Canonical outputs are produced by calibration_guard_node:
+    #   /techx/vision/frame
+    #   /techx/vision/selected
     publish_frame_topic: true
     publish_object_topic: true
     publish_detail_topic: false
     publish_legacy_topic: false
     accept_legacy: false
 
-    # One-node request selector. If true, this same node also subscribes
-    # /techx/vision/request and publishes /techx/vision/selected.
+    # One-node request selector. The raw selected result is sanitized by
+    # calibration_guard_node before becoming /techx/vision/selected.
     enable_request_selector: true
 
     # Use reliable QoS by default so normal decision/navigation subscribers
@@ -46,23 +47,27 @@ vision_bridge_node:
     #   weapon head fist  = 100
     #   weapon head palm  = 101
     #   weapon head spear = 102
+    #   R1 assembly light red / success marker  = 150
+    #   R1 assembly light blue / success marker = 151
+    #   assembly success marker / generic       = 152
     #   QR code           = 200
     #
     # Class mapping rule format:
     #   "class_or_range:zone_id:target_type:control_frame:priority_bias"
     # Frame ids: 1=camera_link, 2=robot_base, 3=arm1_base, 4=arm2_base
     class_rules:
-      - "0-5:2:2:4:0.0"       # KFS -> arm2_base by default
-      - "100-102:1:1:3:0.0"   # weapon head -> arm1_base by default
-      - "200:3:3:2:0.0"       # QR -> robot_base
-      # Reserved examples for future objects:
-      # - "150-159:10:10:2:0.0" # docking/assembly marker -> robot_base
-      # - "160-169:10:11:3:0.0" # arm1-specific auxiliary target -> arm1_base
+      - "0-5:2:2:4:0.0"        # KFS -> arm2_base by default
+      - "100-102:1:1:3:0.0"    # weapon head -> arm1_base by default
+      - "150-152:10:10:1:0.5"  # assembly light/success event -> camera_link/event use
+      - "200:3:3:2:0.0"        # QR -> robot_base
 
     # Fixed extrinsics. Each list is [x, y, z, roll, pitch, yaw] in meters/radians.
     # T_robot_camera: point_robot = R * point_camera + t
     # T_arm1_robot:  point_arm1  = R * point_robot  + t
     # T_arm2_robot:  point_arm2  = R * point_robot  + t
+    #
+    # These values may be prefilled before field calibration, but they are NOT
+    # trusted until calibration_guard_node marks the corresponding calibrated flag true.
     enable_transforms: true
     T_robot_camera_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     T_arm1_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -72,11 +77,32 @@ vision_bridge_node:
     watchdog_timeout_sec: 0.3
 
     # Fatal watchdog: if no valid Jetson UDP V2/legacy frame is received for this
-    # long, the node shuts itself down. 600s = 10 minutes. Set 0.0 to disable.
-    fatal_no_udp_timeout_sec: 600.0
+    # long, the node shuts itself down. 0.0 disables self-shutdown; let launch/systemd
+    # own process restart policy during competition.
+    fatal_no_udp_timeout_sec: 0.0
 
     # Request/selected behavior inside the same vision_bridge_node.
-    # request_timeout_sec=0.0 keeps the latest request until decision sends a new one.
-    request_timeout_sec: 0.0
+    # A non-zero timeout prevents stale requests from surviving state changes.
+    request_timeout_sec: 0.5
     default_max_frame_age_sec: 0.20
     publish_period_ms: 50
+
+calibration_guard_node:
+  ros__parameters:
+    input_frame_topic: "/techx/vision/frame_raw"
+    output_frame_topic: "/techx/vision/frame"
+    input_selected_topic: "/techx/vision/selected_raw"
+    output_selected_topic: "/techx/vision/selected"
+
+    # Field hand-eye calibration safety flags. Keep false until the exported YAML
+    # from Jetson/field calibration has been copied here and verified on the robot.
+    robot_camera_calibrated: false
+    arm1_robot_calibrated: false
+    arm2_robot_calibrated: false
+
+    # When false, even camera_link control_x/y/z is blocked while uncalibrated.
+    # Keep true for visual alignment/event-only behaviors such as assembly light.
+    allow_camera_link_control_when_uncalibrated: true
+
+    reliable_qos: true
+    qos_depth: 5
