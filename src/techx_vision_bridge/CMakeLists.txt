@@ -56,6 +56,7 @@ install(PROGRAMS
   tools/check_vision_bridge_config.py
   tools/estimate_extrinsic_from_points.py
   tools/vision_request_demo.py
+  tools/calibration_guard_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
