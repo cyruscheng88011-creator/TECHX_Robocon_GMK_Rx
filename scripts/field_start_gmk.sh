@@ -7,12 +7,20 @@ cd "${REPO_DIR}"
 NET_IFACE="${TECHX_NET_IFACE:-}"
 PACKAGE="techx_vision_bridge"
 
-if [[ "${TECHX_SKIP_NET_SETUP:-0}" != "1" ]]; then
-  if [[ "${EUID}" -eq 0 ]]; then
-    bash scripts/setup_field_network.sh gmk ${NET_IFACE:+"${NET_IFACE}"}
-  else
-    sudo bash scripts/setup_field_network.sh gmk ${NET_IFACE:+"${NET_IFACE}"}
+run_net_setup() {
+  local args=(gmk)
+  if [[ -n "${NET_IFACE}" ]]; then
+    args+=("${NET_IFACE}")
   fi
+  if [[ "${EUID}" -eq 0 ]]; then
+    bash scripts/setup_field_network.sh "${args[@]}"
+  else
+    sudo bash scripts/setup_field_network.sh "${args[@]}"
+  fi
+}
+
+if [[ "${TECHX_SKIP_NET_SETUP:-0}" != "1" ]]; then
+  run_net_setup
 else
   echo "[TECHX] Skip network setup because TECHX_SKIP_NET_SETUP=1"
 fi
