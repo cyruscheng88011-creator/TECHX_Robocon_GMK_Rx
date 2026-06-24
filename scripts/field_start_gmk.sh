@@ -35,12 +35,13 @@ else
   echo "[TECHX] WARN: no /opt/ros/<distro>/setup.bash found; assuming ROS2 environment is already sourced." >&2
 fi
 
-if command -v colcon >/dev/null 2>&1; then
-  echo "[TECHX] Building ${PACKAGE}"
-  colcon build --packages-select "${PACKAGE}"
-else
-  echo "[TECHX] WARN: colcon not found; skipping build." >&2
+if ! command -v colcon >/dev/null 2>&1; then
+  echo "[TECHX] ERROR: colcon not found. Install/source ROS2 colcon before starting GMK." >&2
+  exit 2
 fi
+
+echo "[TECHX] Building ${PACKAGE}"
+colcon build --packages-select "${PACKAGE}"
 
 if [[ -f install/setup.bash ]]; then
   # shellcheck disable=SC1091
