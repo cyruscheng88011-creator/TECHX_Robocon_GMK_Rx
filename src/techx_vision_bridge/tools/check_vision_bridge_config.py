@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""Static checker for the GMK techx_vision_bridge YAML config.
-
-This does not require ROS 2 runtime or hardware. It checks the single-node
-competition contract:
-
-    vision_bridge_node receives Jetson UDP V2, publishes /frame,
-    subscribes /request, publishes /selected, and shuts down after a
-    configurable long no-data timeout.
-"""
+"""Static checker for the GMK techx_vision_bridge YAML config."""
 
 from __future__ import annotations
 
@@ -15,7 +7,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 REQUIRED_CLASS_IDS = {
     0: "kfs_red_r1",
@@ -27,10 +19,14 @@ REQUIRED_CLASS_IDS = {
     100: "weapon_head_fist",
     101: "weapon_head_palm",
     102: "weapon_head_spear",
+    150: "r1_assembly_light_red",
+    151: "r1_assembly_light_blue",
+    152: "assembly_success",
     200: "qr_code",
 }
 
 RULE_RE = re.compile(r'"([^":]+):(\d+):(\d+):(\d+):([-+0-9.]+)"')
+LIST_RE_TMPL = r"^\s*{key}:\s*\[([^\]]*)\]"
 
 
 def read_rules(text: str) -> List[Tuple[int, int, int, int, int, float]]:
@@ -52,9 +48,36 @@ def covered(rules: List[Tuple[int, int, int, int, int, float]], cid: int) -> boo
     return any(lo <= cid <= hi for lo, hi, *_ in rules)
 
 
-def scalar_value(text: str, key: str) -> str | None:
+def scalar_value(text: str, key: str) -> Optional[str]:
     m = re.search(rf"^\s*{re.escape(key)}:\s*([^#\n]+)", text, re.M)
     return m.group(1).strip() if m else None
+
+
+def bool_value(text: str, key: str) -> Optional[bool]:
+    value = scalar_value(text, key)
+    if value is None:
+        return None
+    return value.strip().lower() in {"true", "1", "yes", "on"}
+
+
+def list_value(text: str, key: str) -> Optional[List[float]]:
+    m = re.search(LIST_RE_TMPL.format(key=re.escape(key)), text, re.M)
+    if not m:
+        return None
+    out = []
+    for item in m.group(1).split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            out.append(float(item))
+        except ValueError:
+            return None
+    return out
+
+
+def all_zero(values: Optional[List[float]]) -> bool:
+    return values is not None and len(values) == 6 and all(abs(v) < 1e-9 for v in values)
 
 
 def require_key(text: str, key: str) -> bool:
@@ -64,7 +87,7 @@ def require_key(text: str, key: str) -> bool:
     return True
 
 
-def parse_float(text: str, key: str) -> float | None:
+def parse_float(text: str, key: str) -> Optional[float]:
     value = scalar_value(text, key)
     if value is None:
         return None
@@ -75,30 +98,43 @@ def parse_float(text: str, key: str) -> float | None:
         return None
 
 
+def check_calibration_flag(text: str, flag_key: str, transform_key: str) -> int:
+    flag = bool_value(text, flag_key)
+    values = list_value(text, transform_key)
+    errors = 0
+    if flag is None:
+        print(f"[ERROR] missing {flag_key}")
+        return 1
+    if values is None:
+        print(f"[ERROR] missing or invalid {transform_key}")
+        return 1
+    if flag and all_zero(values):
+        print(f"[ERROR] {flag_key}=true but {transform_key} is all zeros")
+        errors += 1
+    elif not flag and all_zero(values):
+        print(f"[WARN] {transform_key} is still all zeros; keep {flag_key}=false until field calibration is done")
+    return errors
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check GMK single-node vision bridge config without ROS/hardware")
+    parser = argparse.ArgumentParser(description="Check GMK vision bridge config without ROS/hardware")
     parser.add_argument("--config", default="src/techx_vision_bridge/config/vision_bridge.yaml")
     args = parser.parse_args()
 
     text = Path(args.config).read_text(encoding="utf-8")
     errors = 0
 
-    if "vision_bridge_node:" not in text:
-        print("[ERROR] missing top-level vision_bridge_node")
-        errors += 1
-    if "vision_selector_node:" in text:
-        print("[ERROR] vision_selector_node should not be a separate top-level node in the simplified single-node design")
-        errors += 1
+    for top in ("vision_bridge_node:", "calibration_guard_node:"):
+        if top not in text:
+            print(f"[ERROR] missing top-level {top.rstrip(':')}")
+            errors += 1
+    if "selection_debug_node:" not in text:
+        print("[WARN] missing top-level selection_debug_node; launch defaults will still run but CSV path cannot be configured")
 
     for key in (
-        "udp_bind_addr",
-        "udp_port",
-        "frame_topic_name",
-        "request_topic_name",
-        "selected_topic_name",
-        "enable_request_selector",
-        "watchdog_timeout_sec",
-        "fatal_no_udp_timeout_sec",
+        "udp_bind_addr", "udp_port", "frame_topic_name", "request_topic_name", "selected_topic_name",
+        "enable_request_selector", "watchdog_timeout_sec", "fatal_no_udp_timeout_sec",
+        "input_frame_topic", "output_frame_topic", "input_selected_topic", "output_selected_topic",
     ):
         if not require_key(text, key):
             errors += 1
@@ -138,15 +174,14 @@ def main() -> int:
     else:
         print(f"fatal_no_udp_timeout_sec: {fatal_timeout:.1f}s")
 
-    for key in ("T_robot_camera_xyz_rpy", "T_arm1_robot_xyz_rpy", "T_arm2_robot_xyz_rpy"):
-        if scalar_value(text, key) is None:
-            print(f"[ERROR] missing {key}")
-            errors += 1
+    errors += check_calibration_flag(text, "robot_camera_calibrated", "T_robot_camera_xyz_rpy")
+    errors += check_calibration_flag(text, "arm1_robot_calibrated", "T_arm1_robot_xyz_rpy")
+    errors += check_calibration_flag(text, "arm2_robot_calibrated", "T_arm2_robot_xyz_rpy")
 
     if errors:
         print(f"FAILED: {errors} error(s)")
         return 1
-    print("OK: GMK single-node vision bridge config matches the competition communication contract")
+    print("OK: GMK vision bridge config matches the field communication and calibration contract")
     return 0
 
 
