@@ -58,6 +58,7 @@ install(PROGRAMS
   tools/vision_request_demo.py
   tools/calibration_guard_node.py
   tools/selection_debug_node.py
+  tools/apply_calibration_yaml.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
