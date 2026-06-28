@@ -25,6 +25,13 @@ REQUIRED_CLASS_IDS = {
     200: "qr_code",
 }
 
+EXPECTED_RULES = {
+    0: (2, 2, 4),      # KFS -> arm2_base
+    100: (1, 1, 3),    # weapon head -> arm1_base
+    150: (10, 10, 1),  # assembly event -> camera_link
+    200: (3, 3, 2),    # QR -> robot_base
+}
+
 RULE_RE = re.compile(r'"([^":]+):(\d+):(\d+):(\d+):([-+0-9.]+)"')
 LIST_RE_TMPL = r"^\s*{key}:\s*\[([^\]]*)\]"
 
@@ -44,13 +51,25 @@ def read_rules(text: str) -> List[Tuple[int, int, int, int, int, float]]:
     return rules
 
 
+def matching_rule(rules: List[Tuple[int, int, int, int, int, float]], cid: int) -> Optional[Tuple[int, int, int, int, int, float]]:
+    for rule in rules:
+        lo, hi, *_ = rule
+        if lo <= cid <= hi:
+            return rule
+    return None
+
+
 def covered(rules: List[Tuple[int, int, int, int, int, float]], cid: int) -> bool:
-    return any(lo <= cid <= hi for lo, hi, *_ in rules)
+    return matching_rule(rules, cid) is not None
 
 
 def scalar_value(text: str, key: str) -> Optional[str]:
     m = re.search(rf"^\s*{re.escape(key)}:\s*([^#\n]+)", text, re.M)
     return m.group(1).strip() if m else None
+
+
+def scalar_values(text: str, key: str) -> List[str]:
+    return [m.group(1).strip() for m in re.finditer(rf"^\s*{re.escape(key)}:\s*([^#\n]+)", text, re.M)]
 
 
 def bool_value(text: str, key: str) -> Optional[bool]:
@@ -61,23 +80,35 @@ def bool_value(text: str, key: str) -> Optional[bool]:
 
 
 def list_value(text: str, key: str) -> Optional[List[float]]:
-    m = re.search(LIST_RE_TMPL.format(key=re.escape(key)), text, re.M)
-    if not m:
-        return None
-    out = []
-    for item in m.group(1).split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            out.append(float(item))
-        except ValueError:
-            return None
-    return out
+    values = list_values(text, key)
+    return values[0] if values else None
+
+
+def list_values(text: str, key: str) -> List[List[float]]:
+    out_all: List[List[float]] = []
+    for m in re.finditer(LIST_RE_TMPL.format(key=re.escape(key)), text, re.M):
+        out = []
+        ok = True
+        for item in m.group(1).split(","):
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                out.append(float(item))
+            except ValueError:
+                ok = False
+                break
+        if ok:
+            out_all.append(out)
+    return out_all
 
 
 def all_zero(values: Optional[List[float]]) -> bool:
     return values is not None and len(values) == 6 and all(abs(v) < 1e-9 for v in values)
+
+
+def same_list(a: List[float], b: List[float], eps: float = 1e-9) -> bool:
+    return len(a) == len(b) == 6 and all(abs(x - y) <= eps for x, y in zip(a, b))
 
 
 def require_key(text: str, key: str) -> bool:
@@ -100,19 +131,30 @@ def parse_float(text: str, key: str) -> Optional[float]:
 
 def check_calibration_flag(text: str, flag_key: str, transform_key: str) -> int:
     flag = bool_value(text, flag_key)
-    values = list_value(text, transform_key)
+    values_all = list_values(text, transform_key)
     errors = 0
     if flag is None:
         print(f"[ERROR] missing {flag_key}")
         return 1
-    if values is None:
-        print(f"[ERROR] missing or invalid {transform_key}")
+    if len(values_all) != 2:
+        print(f"[ERROR] expected {transform_key} in both vision_bridge_node and calibration_guard_node; found {len(values_all)}")
         return 1
+    if any(len(v) != 6 for v in values_all):
+        print(f"[ERROR] invalid {transform_key}; expected 6 values")
+        return 1
+    if not same_list(values_all[0], values_all[1]):
+        print(f"[ERROR] {transform_key} differs between vision_bridge_node and calibration_guard_node")
+        errors += 1
+    values = values_all[0]
     if flag and all_zero(values):
         print(f"[ERROR] {flag_key}=true but {transform_key} is all zeros")
         errors += 1
     elif not flag and all_zero(values):
         print(f"[WARN] {transform_key} is still all zeros; keep {flag_key}=false until field calibration is done")
+    elif not flag and not all_zero(values):
+        print(f"[WARN] {transform_key} is non-zero but {flag_key}=false; guarded /selected will block this frame")
+    else:
+        print(f"[OK] {flag_key}=true and {transform_key} is populated consistently")
     return errors
 
 
@@ -134,6 +176,7 @@ def main() -> int:
     for key in (
         "udp_bind_addr", "udp_port", "frame_topic_name", "request_topic_name", "selected_topic_name",
         "enable_request_selector", "watchdog_timeout_sec", "fatal_no_udp_timeout_sec",
+        "request_timeout_sec", "default_max_frame_age_sec",
         "input_frame_topic", "output_frame_topic", "input_selected_topic", "output_selected_topic",
     ):
         if not require_key(text, key):
@@ -153,6 +196,15 @@ def main() -> int:
             print(f"[ERROR] class_id {cid} ({name}) is not covered by class_rules")
             errors += 1
 
+    for cid, expected in EXPECTED_RULES.items():
+        rule = matching_rule(rules, cid)
+        if rule is None:
+            continue
+        _lo, _hi, zone, typ, frame, _bias = rule
+        if (zone, typ, frame) != expected:
+            print(f"[ERROR] class_id {cid} maps to zone/type/frame {(zone, typ, frame)} but expected {expected}")
+            errors += 1
+
     for key in ("publish_detail_topic", "publish_legacy_topic", "accept_legacy"):
         value = scalar_value(text, key)
         if value is None:
@@ -163,6 +215,22 @@ def main() -> int:
 
     if scalar_value(text, "enable_request_selector") not in ("true", "True"):
         print("[WARN] enable_request_selector is not true; /request -> /selected will be disabled")
+
+    request_timeout = parse_float(text, "request_timeout_sec")
+    if request_timeout is None:
+        errors += 1
+    elif request_timeout < 0.3:
+        print("[WARN] request_timeout_sec is very short; decision code must publish faster than this")
+    else:
+        print(f"request_timeout_sec: {request_timeout:.2f}s")
+
+    frame_age = parse_float(text, "default_max_frame_age_sec")
+    if frame_age is None:
+        errors += 1
+    elif frame_age > 0.5:
+        print("[WARN] default_max_frame_age_sec is high; stale targets may remain selectable")
+    else:
+        print(f"default_max_frame_age_sec: {frame_age:.2f}s")
 
     fatal_timeout = parse_float(text, "fatal_no_udp_timeout_sec")
     if fatal_timeout is None:
