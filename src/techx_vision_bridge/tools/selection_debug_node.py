@@ -15,6 +15,8 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPo
 from techx_vision_bridge.msg import VisionFrame, VisionObject, VisionRequest, VisionSelection
 
 
+FRAME_CAMERA_LINK = 1
+
 FIELDS = [
     "time", "frame_seq", "request_seq", "status", "reason", "has_match",
     "request_class_id", "request_type", "request_zone", "require_xyz",
@@ -120,7 +122,7 @@ class SelectionDebugNode(Node):
     def explain(self, sel: VisionSelection, guarded: bool) -> Tuple[Optional[VisionObject], str]:
         if guarded and self.latest_raw_selection and self.latest_raw_selection.has_match and not sel.has_match:
             raw_target = self.latest_raw_selection.target
-            if raw_target.control_frame != VisionObject.FRAME_CAMERA_LINK and not raw_target.valid_control_xyz:
+            if raw_target.control_frame != FRAME_CAMERA_LINK and not raw_target.valid_control_xyz:
                 return raw_target, "UNCALIBRATED"
             return raw_target, "BLOCKED_AFTER_SELECTOR_OR_GUARD"
         if sel.status == VisionSelection.STATUS_OK and sel.has_match:
@@ -172,7 +174,7 @@ class SelectionDebugNode(Node):
             best_after_conf = max(candidates, key=lambda t: float(t.confidence)) if candidates else best
             candidates = [t for t in candidates if t.valid_control_xyz]
             if not candidates:
-                if best_after_conf.control_frame != VisionObject.FRAME_CAMERA_LINK:
+                if best_after_conf.control_frame != FRAME_CAMERA_LINK:
                     return best_after_conf, "UNCALIBRATED"
                 return best_after_conf, "NO_VALID_CONTROL_XYZ"
         if candidates:
