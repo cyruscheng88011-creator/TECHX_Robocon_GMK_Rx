@@ -39,11 +39,13 @@ constexpr uint8_t ZONE_UNKNOWN = 0;
 constexpr uint8_t ZONE_HEAD = 1;
 constexpr uint8_t ZONE_KFS = 2;
 constexpr uint8_t ZONE_QR = 3;
+constexpr uint8_t ZONE_EVENT = 10;  // assembly light / success events (camera_link)
 
 constexpr uint8_t TYPE_UNKNOWN = 0;
 constexpr uint8_t TYPE_HEAD = 1;
 constexpr uint8_t TYPE_KFS = 2;
 constexpr uint8_t TYPE_QR = 3;
+constexpr uint8_t TYPE_EVENT = 10;  // assembly light / success events (camera_link)
 
 constexpr uint8_t FRAME_CAMERA_LINK = 1;
 constexpr uint8_t FRAME_ROBOT_BASE = 2;
@@ -206,6 +208,19 @@ Transform make_transform_from_xyz_rpy(const std::vector<double> &p) {
   return tf;
 }
 
+// All-zero xyz+rpy is the uncalibrated sentinel used across the field config and
+// enforced by tools/check_vision_bridge_config.py. A real camera->robot or
+// robot->arm extrinsic is never exactly identity, so treat all-zeros as
+// "not calibrated" and refuse to derive that frame's coordinates. This keeps even
+// the raw topics from advertising identity-mapped (camera == arm) garbage as valid.
+bool is_calibrated_xyz_rpy(const std::vector<double> &p) {
+  if (p.size() != 6) return false;
+  for (double v : p) {
+    if (std::abs(v) > 1e-9) return true;
+  }
+  return false;
+}
+
 Vec3 apply_transform(const Transform &tf, const Vec3 &p) {
   return Vec3{
       tf.r[0][0] * p.x + tf.r[0][1] * p.y + tf.r[0][2] * p.z + tf.t.x,
@@ -253,9 +268,14 @@ ClassRule make_rule(int lo, int hi, uint8_t zone, uint8_t type, uint8_t frame, f
 }
 
 std::vector<ClassRule> default_rules() {
+  // Keep this in sync with config/vision_bridge.yaml class_rules and
+  // tools/check_vision_bridge_config.py EXPECTED_RULES. Used only when the YAML
+  // does not provide class_rules, but a missing assembly-light rule here would
+  // silently map lightbar/success events to UNKNOWN zone/type, so include it.
   return {
       make_rule(0, 5, ZONE_KFS, TYPE_KFS, FRAME_ARM2_BASE, 0.0f),
       make_rule(100, 102, ZONE_HEAD, TYPE_HEAD, FRAME_ARM1_BASE, 0.0f),
+      make_rule(150, 152, ZONE_EVENT, TYPE_EVENT, FRAME_CAMERA_LINK, 0.5f),
       make_rule(200, 200, ZONE_QR, TYPE_QR, FRAME_ROBOT_BASE, 0.0f),
   };
 }
@@ -299,6 +319,17 @@ class VisionFrameBridgeNode : public rclcpp::Node {
                 bind_addr_.c_str(), udp_port_, accept_legacy_ ? "true" : "false",
                 enable_transforms_ ? "true" : "false", enable_request_selector_ ? "true" : "false",
                 fatal_no_udp_timeout_sec_, class_rules_.size());
+    RCLCPP_INFO(get_logger(),
+                "extrinsic calibration: robot_camera=%s arm1_robot=%s arm2_robot=%s "
+                "(all-zero transform = uncalibrated; raw arm/robot coordinates stay invalid until set)",
+                robot_camera_calibrated_ ? "calibrated" : "IDENTITY",
+                arm1_robot_calibrated_ ? "calibrated" : "IDENTITY",
+                arm2_robot_calibrated_ ? "calibrated" : "IDENTITY");
+    if (enable_transforms_ && !robot_camera_calibrated_) {
+      RCLCPP_WARN(get_logger(),
+                  "T_robot_camera is identity: robot_base/arm_base coordinates are disabled until field calibration. "
+                  "CENTER (u/v) still works; GRASP requests with require_control_xyz will report NO_MATCH.");
+    }
   }
 
   ~VisionFrameBridgeNode() override {
@@ -325,7 +356,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter("qos_depth", 5);
     declare_parameter("image_width", 640.0);
     declare_parameter("image_height", 480.0);
-    declare_parameter<std::vector<std::string>>("class_rules", {"0-5:2:2:4:0.0", "100-102:1:1:3:0.0", "200:3:3:2:0.0"});
+    declare_parameter<std::vector<std::string>>("class_rules", {"0-5:2:2:4:0.0", "100-102:1:1:3:0.0", "150-152:10:10:1:0.5", "200:3:3:2:0.0"});
     declare_parameter("enable_transforms", true);
     declare_parameter<std::vector<double>>("T_robot_camera_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     declare_parameter<std::vector<double>>("T_arm1_robot_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -352,9 +383,15 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     image_height_ = get_parameter("image_height").as_double();
     class_rules_ = parse_rules(get_parameter("class_rules").as_string_array());
     enable_transforms_ = get_parameter("enable_transforms").as_bool();
-    tf_robot_camera_ = make_transform_from_xyz_rpy(get_parameter("T_robot_camera_xyz_rpy").as_double_array());
-    tf_arm1_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm1_robot_xyz_rpy").as_double_array());
-    tf_arm2_robot_ = make_transform_from_xyz_rpy(get_parameter("T_arm2_robot_xyz_rpy").as_double_array());
+    const auto rc_param = get_parameter("T_robot_camera_xyz_rpy").as_double_array();
+    const auto a1_param = get_parameter("T_arm1_robot_xyz_rpy").as_double_array();
+    const auto a2_param = get_parameter("T_arm2_robot_xyz_rpy").as_double_array();
+    tf_robot_camera_ = make_transform_from_xyz_rpy(rc_param);
+    tf_arm1_robot_ = make_transform_from_xyz_rpy(a1_param);
+    tf_arm2_robot_ = make_transform_from_xyz_rpy(a2_param);
+    robot_camera_calibrated_ = is_calibrated_xyz_rpy(rc_param);
+    arm1_robot_calibrated_ = is_calibrated_xyz_rpy(a1_param);
+    arm2_robot_calibrated_ = is_calibrated_xyz_rpy(a2_param);
     watchdog_timeout_sec_ = get_parameter("watchdog_timeout_sec").as_double();
     fatal_no_udp_timeout_sec_ = get_parameter("fatal_no_udp_timeout_sec").as_double();
     request_timeout_sec_ = get_parameter("request_timeout_sec").as_double();
@@ -569,23 +606,31 @@ class VisionFrameBridgeNode : public rclcpp::Node {
       t.align_err_x = static_cast<float>((static_cast<double>(t.u) - cx) / cx);
       t.align_err_y = static_cast<float>((static_cast<double>(t.v) - cy) / cy);
     }
-    if (enable_transforms_ && t.valid_xyz) {
+    // Only derive a frame's coordinates when its extrinsic is actually calibrated
+    // (non-identity). calibration_guard_node remains the authoritative gate for the
+    // canonical topics via explicit *_calibrated flags; this is defense-in-depth so
+    // the raw topics never publish identity-mapped arm/robot coordinates as valid.
+    if (enable_transforms_ && t.valid_xyz && robot_camera_calibrated_) {
       const Vec3 camera{t.x, t.y, t.z};
       const Vec3 robot = apply_transform(tf_robot_camera_, camera);
       t.valid_robot_xyz = true;
       t.robot_x = static_cast<float>(robot.x);
       t.robot_y = static_cast<float>(robot.y);
       t.robot_z = static_cast<float>(robot.z);
-      const Vec3 arm1 = apply_transform(tf_arm1_robot_, robot);
-      t.valid_arm1_xyz = true;
-      t.arm1_x = static_cast<float>(arm1.x);
-      t.arm1_y = static_cast<float>(arm1.y);
-      t.arm1_z = static_cast<float>(arm1.z);
-      const Vec3 arm2 = apply_transform(tf_arm2_robot_, robot);
-      t.valid_arm2_xyz = true;
-      t.arm2_x = static_cast<float>(arm2.x);
-      t.arm2_y = static_cast<float>(arm2.y);
-      t.arm2_z = static_cast<float>(arm2.z);
+      if (arm1_robot_calibrated_) {
+        const Vec3 arm1 = apply_transform(tf_arm1_robot_, robot);
+        t.valid_arm1_xyz = true;
+        t.arm1_x = static_cast<float>(arm1.x);
+        t.arm1_y = static_cast<float>(arm1.y);
+        t.arm1_z = static_cast<float>(arm1.z);
+      }
+      if (arm2_robot_calibrated_) {
+        const Vec3 arm2 = apply_transform(tf_arm2_robot_, robot);
+        t.valid_arm2_xyz = true;
+        t.arm2_x = static_cast<float>(arm2.x);
+        t.arm2_y = static_cast<float>(arm2.y);
+        t.arm2_z = static_cast<float>(arm2.z);
+      }
     }
     copy_control_coordinates(t);
     t.priority = t.confidence + t.priority_bias - 0.2f * (std::abs(t.align_err_x) + std::abs(t.align_err_y));
@@ -884,6 +929,9 @@ class VisionFrameBridgeNode : public rclcpp::Node {
   Transform tf_robot_camera_{};
   Transform tf_arm1_robot_{};
   Transform tf_arm2_robot_{};
+  bool robot_camera_calibrated_{false};
+  bool arm1_robot_calibrated_{false};
+  bool arm2_robot_calibrated_{false};
   double watchdog_timeout_sec_{0.3};
   double fatal_no_udp_timeout_sec_{600.0};
   double request_timeout_sec_{0.0};

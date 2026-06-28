@@ -73,10 +73,14 @@ def load_snippet(path: Path) -> tuple[Dict[str, List[float]], Dict[str, bool]]:
                 flags[flag] = parse_bool(stripped.split(":", 1)[1])
     if not transforms:
         raise ValueError(f"no T_*_xyz_rpy transform found in {path}")
-    # The exporter marks accepted calibrations true. If a flag is absent, infer true
-    # for each transform present; operators can still edit flags manually if needed.
+    # The Jetson exporter always writes an explicit *_calibrated flag (true only
+    # when the fit passed its thresholds). If a flag is missing from a hand-written
+    # or legacy snippet, fail closed: keep it false so a transform can never be
+    # silently advertised as calibrated. Operators can flip it by hand after review.
     for key in transforms:
-        flags.setdefault(FLAG_KEYS[key], True)
+        if FLAG_KEYS[key] not in flags:
+            print(f"[GMK] WARN: {FLAG_KEYS[key]} absent in snippet; defaulting to false (fail-closed)")
+            flags[FLAG_KEYS[key]] = False
     return transforms, flags
 
 

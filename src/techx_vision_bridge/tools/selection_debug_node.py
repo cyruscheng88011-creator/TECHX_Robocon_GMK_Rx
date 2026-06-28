@@ -22,6 +22,11 @@ FIELDS = [
     "request_class_id", "request_type", "request_zone", "require_xyz",
     "target_count", "best_class_id", "best_conf", "best_valid_xyz",
     "best_valid_control_xyz", "best_control_frame", "frame_age_sec",
+    # control_x/y/z carried by THIS selection (selected_raw=pre-compensation,
+    # selected=post-compensation). raw_control_* mirrors the matching pre-guard
+    # selection so a guarded row shows the before/after grasp offset on one line.
+    "guarded", "best_control_x", "best_control_y", "best_control_z",
+    "raw_control_x", "raw_control_y", "raw_control_z",
 ]
 
 STATUS_NAMES = {
@@ -94,6 +99,10 @@ class SelectionDebugNode(Node):
         req = self.latest_request
         frame = self.latest_frame
         best, reason = self.explain(sel, guarded)
+        raw_ctrl = (0.0, 0.0, 0.0)
+        if guarded and self.latest_raw_selection and self.latest_raw_selection.has_match:
+            rt = self.latest_raw_selection.target
+            raw_ctrl = (float(rt.control_x), float(rt.control_y), float(rt.control_z))
         row = {
             "time": time.time(),
             "frame_seq": int(sel.frame_seq or (frame.seq if frame else 0)),
@@ -112,6 +121,13 @@ class SelectionDebugNode(Node):
             "best_valid_control_xyz": int(bool(best.valid_control_xyz)) if best else 0,
             "best_control_frame": int(best.control_frame) if best else 0,
             "frame_age_sec": float(sel.frame_age_sec),
+            "guarded": int(bool(guarded)),
+            "best_control_x": float(best.control_x) if best else 0.0,
+            "best_control_y": float(best.control_y) if best else 0.0,
+            "best_control_z": float(best.control_z) if best else 0.0,
+            "raw_control_x": raw_ctrl[0],
+            "raw_control_y": raw_ctrl[1],
+            "raw_control_z": raw_ctrl[2],
         }
         try:
             self.writer.writerow(row)

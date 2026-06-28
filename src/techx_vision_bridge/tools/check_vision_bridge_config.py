@@ -35,6 +35,10 @@ EXPECTED_RULES = {
 RULE_RE = re.compile(r'"([^":]+):(\d+):(\d+):(\d+):([-+0-9.]+)"')
 LIST_RE_TMPL = r"^\s*{key}:\s*\[([^\]]*)\]"
 
+# Grasp compensation is intended for graspable classes only (KFS, weapon heads).
+GRASP_CLASS_RANGES = [(0, 5), (100, 102)]
+COMP_ENTRY_RE = re.compile(r'"([^"]+)"')
+
 
 def read_rules(text: str) -> List[Tuple[int, int, int, int, int, float]]:
     rules = []
@@ -158,6 +162,48 @@ def check_calibration_flag(text: str, flag_key: str, transform_key: str) -> int:
     return errors
 
 
+def check_grasp_compensation(text: str) -> int:
+    """Validate the optional grasp_compensation list in calibration_guard_node."""
+    # Anchor to a real (non-comment) line so a commented example is not validated.
+    m = re.search(r"^\s*grasp_compensation:\s*\[(.*?)\]", text, re.S | re.M)
+    if not m:
+        # Optional feature; the node default is no compensation.
+        print("[OK] grasp_compensation: not set (control_x/y/z passed through unchanged)")
+        return 0
+    entries = [e for e in COMP_ENTRY_RE.findall(m.group(1)) if e.strip()]
+    if not entries:
+        print("[OK] grasp_compensation: empty (control_x/y/z passed through unchanged)")
+        return 0
+    errors = 0
+    for entry in entries:
+        parts = entry.split(":")
+        if len(parts) != 4:
+            print(f"[ERROR] grasp_compensation entry '{entry}' is not 'class_or_range:dx:dy:dz'")
+            errors += 1
+            continue
+        range_s = parts[0].strip()
+        try:
+            if "-" in range_s:
+                lo_s, hi_s = range_s.split("-", 1)
+                lo, hi = int(lo_s), int(hi_s)
+            else:
+                lo = hi = int(range_s)
+            if hi < lo:
+                lo, hi = hi, lo
+            dx, dy, dz = float(parts[1]), float(parts[2]), float(parts[3])
+        except ValueError:
+            print(f"[ERROR] grasp_compensation entry '{entry}' has non-numeric range/offset")
+            errors += 1
+            continue
+        in_grasp = any(lo >= g_lo and hi <= g_hi for g_lo, g_hi in GRASP_CLASS_RANGES)
+        if not in_grasp:
+            print(f"[WARN] grasp_compensation '{entry}' targets class {lo}-{hi} outside grasp classes (0-5, 100-102)")
+        if max(abs(dx), abs(dy), abs(dz)) > 0.10:
+            print(f"[WARN] grasp_compensation '{entry}' offset >0.10m looks large; values are meters")
+        print(f"[OK] grasp_compensation {lo}-{hi}: dx={dx:.4f} dy={dy:.4f} dz={dz:.4f}")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check GMK vision bridge config without ROS/hardware")
     parser.add_argument("--config", default="src/techx_vision_bridge/config/vision_bridge.yaml")
@@ -245,6 +291,8 @@ def main() -> int:
     errors += check_calibration_flag(text, "robot_camera_calibrated", "T_robot_camera_xyz_rpy")
     errors += check_calibration_flag(text, "arm1_robot_calibrated", "T_arm1_robot_xyz_rpy")
     errors += check_calibration_flag(text, "arm2_robot_calibrated", "T_arm2_robot_xyz_rpy")
+
+    errors += check_grasp_compensation(text)
 
     if errors:
         print(f"FAILED: {errors} error(s)")

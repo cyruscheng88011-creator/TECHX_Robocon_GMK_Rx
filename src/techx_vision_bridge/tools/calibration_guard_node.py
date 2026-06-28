@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import rclpy
 from rclpy.node import Node
@@ -17,6 +17,46 @@ FRAME_CAMERA_LINK = 1
 FRAME_ROBOT_BASE = 2
 FRAME_ARM1_BASE = 3
 FRAME_ARM2_BASE = 4
+
+
+# (min_class_id, max_class_id, dx, dy, dz) in the object's control frame, meters.
+CompRule = Tuple[int, int, float, float, float]
+
+
+def parse_grasp_compensation(raw: List[str]) -> List[CompRule]:
+    """Parse 'class_or_range:dx:dy:dz' strings into compensation rules.
+
+    Bad entries are skipped (caller logs the count) so one typo cannot crash the
+    safety node. dx/dy/dz are added to control_x/y/z only; camera/robot/arm
+    coordinates are never modified.
+    """
+    rules: List[CompRule] = []
+    for line in raw or []:
+        parts = str(line).split(":")
+        if len(parts) != 4:
+            continue
+        range_s = parts[0].strip()
+        try:
+            if "-" in range_s:
+                lo_s, hi_s = range_s.split("-", 1)
+                lo, hi = int(lo_s), int(hi_s)
+            else:
+                lo = hi = int(range_s)
+            if hi < lo:
+                lo, hi = hi, lo
+            dx, dy, dz = float(parts[1]), float(parts[2]), float(parts[3])
+        except (TypeError, ValueError):
+            continue
+        rules.append((lo, hi, dx, dy, dz))
+    return rules
+
+
+def lookup_compensation(rules: List[CompRule], class_id: int) -> Optional[Tuple[float, float, float]]:
+    cid = int(class_id)
+    for lo, hi, dx, dy, dz in rules:
+        if lo <= cid <= hi:
+            return dx, dy, dz
+    return None
 
 
 class CalibrationGuardNode(Node):
@@ -32,6 +72,9 @@ class CalibrationGuardNode(Node):
         self.declare_parameter("arm2_robot_calibrated", False)
         self.declare_parameter("allow_camera_link_control_when_uncalibrated", True)
         self.declare_parameter("drop_uncalibrated_control_selection", True)
+        # Lightweight per-class grasp offset applied to control_x/y/z only.
+        # Format: ["class_or_range:dx:dy:dz", ...] meters, e.g. "100-102:0.0:0.0:-0.012".
+        self.declare_parameter("grasp_compensation", [""])
         self.declare_parameter("reliable_qos", True)
         self.declare_parameter("qos_depth", 5)
 
@@ -49,6 +92,15 @@ class CalibrationGuardNode(Node):
         self.arm2_robot_calibrated = bool(self.get_parameter("arm2_robot_calibrated").value)
         self.allow_camera_link_control = bool(self.get_parameter("allow_camera_link_control_when_uncalibrated").value)
         self.drop_uncalibrated_control_selection = bool(self.get_parameter("drop_uncalibrated_control_selection").value)
+
+        raw_comp = list(self.get_parameter("grasp_compensation").value or [])
+        raw_comp = [s for s in raw_comp if str(s).strip()]
+        self.grasp_compensation = parse_grasp_compensation(raw_comp)
+        if len(self.grasp_compensation) != len(raw_comp):
+            self.get_logger().warn(
+                "grasp_compensation: %d/%d entries parsed; check 'class_or_range:dx:dy:dz' format"
+                % (len(self.grasp_compensation), len(raw_comp))
+            )
 
         self.frame_pub = self.create_publisher(VisionFrame, str(self.get_parameter("output_frame_topic").value), qos)
         self.selection_pub = self.create_publisher(VisionSelection, str(self.get_parameter("output_selected_topic").value), qos)
@@ -70,6 +122,14 @@ class CalibrationGuardNode(Node):
             self.get_logger().warn("arm1_base coordinates are blocked until T_arm1_robot is marked calibrated")
         if not self.arm2_robot_calibrated:
             self.get_logger().warn("arm2_base coordinates are blocked until T_arm2_robot is marked calibrated")
+        if self.grasp_compensation:
+            table = ", ".join(
+                "%d-%d:(%.4f,%.4f,%.4f)" % (lo, hi, dx, dy, dz)
+                for lo, hi, dx, dy, dz in self.grasp_compensation
+            )
+            self.get_logger().info("grasp_compensation active (control_x/y/z only): %s" % table)
+        else:
+            self.get_logger().info("grasp_compensation: none configured; control_x/y/z passed through unchanged")
 
     def sanitize_object(self, obj: VisionObject) -> VisionObject:
         out = copy.deepcopy(obj)
@@ -118,7 +178,25 @@ class CalibrationGuardNode(Node):
         else:
             out.valid_control_xyz = False
             out.control_x = out.control_y = out.control_z = 0.0
+
+        self._apply_grasp_compensation(out)
         return out
+
+    def _apply_grasp_compensation(self, out: VisionObject) -> None:
+        """Add a per-class offset to control_x/y/z only (camera/robot/arm untouched).
+
+        Applied after the calibration gate, so an uncalibrated or invalid target
+        (valid_control_xyz=False, control zeroed) never receives a phantom offset.
+        """
+        if not self.grasp_compensation or not out.valid_control_xyz:
+            return
+        comp = lookup_compensation(self.grasp_compensation, out.class_id)
+        if comp is None:
+            return
+        dx, dy, dz = comp
+        out.control_x = float(out.control_x) + dx
+        out.control_y = float(out.control_y) + dy
+        out.control_z = float(out.control_z) + dz
 
     def _should_drop_selection(self, target: VisionObject) -> bool:
         if not self.drop_uncalibrated_control_selection:

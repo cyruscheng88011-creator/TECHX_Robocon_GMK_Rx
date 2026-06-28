@@ -2,6 +2,9 @@
 
 本仓库运行在 **GMK / ROS2 控制端**，负责接收 Jetson UDP V2、发布 ROS2 视觉话题、完成坐标变换、做标定安全保护，并根据 `/techx/vision/request` 输出 `/techx/vision/selected`。
 
+> 📘 **完整现场手册**（话题/节点、四坐标系、应用 Jetson 标定、标定安全、CENTER/GRASP 请求、抓取补偿、调试 CSV、备份）见
+> [`docs/FIELD_OPERATIONS.md`](docs/FIELD_OPERATIONS.md)。Jetson 侧见视觉仓库 `docs/FIELD_OPERATIONS.md`。
+
 Jetson 负责“看见目标并给出 camera_link 坐标”；GMK 负责“把 camera_link 转成 robot_base / arm1_base / arm2_base，并给决策包可用的 control_x/y/z”。
 
 ## 比赛流程
@@ -132,10 +135,16 @@ ros2 run techx_vision_bridge vision_request_demo.py --name assembly_success
 重点看：
 
 ```text
-status, reason, has_match, require_xyz,
-best_class_id, best_conf, best_valid_control_xyz,
-best_control_frame, frame_age_sec
+time, frame_seq, request_seq, status, reason, has_match,
+request_class_id, request_type, request_zone, require_xyz,
+target_count, best_class_id, best_conf, best_valid_xyz,
+best_valid_control_xyz, best_control_frame, frame_age_sec,
+guarded, best_control_x, best_control_y, best_control_z,
+raw_control_x, raw_control_y, raw_control_z
 ```
+
+`best_control_*` 是补偿后的 control 坐标；`raw_control_*` 是补偿前（guard 之前）的坐标，
+guarded 行同时记录两者，便于核对抓取补偿前后。
 
 常见 reason：
 

@@ -67,6 +67,14 @@ calibration_guard_node:
 
     allow_camera_link_control_when_uncalibrated: true
     drop_uncalibrated_control_selection: true
+
+    # Lightweight grasp compensation added to control_x/y/z ONLY (camera/robot/arm
+    # coordinates stay pure). Format: "class_or_range:dx:dy:dz" in meters, applied
+    # in the object's control frame after the calibration gate. Leave as [""] for
+    # no compensation. Example (lower weapon-head grasp by 12mm, push KFS +8mm in y):
+    #   grasp_compensation: ["100-102:0.0:0.0:-0.012", "0-5:0.0:0.008:0.0"]
+    grasp_compensation: [""]
+
     reliable_qos: true
     qos_depth: 5
 
