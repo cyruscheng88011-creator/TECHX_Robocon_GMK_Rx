@@ -33,7 +33,7 @@ vision_bridge_node:
     class_rules:
       - "0-5:2:2:4:0.0"        # KFS -> arm2_base
       - "100-102:1:1:3:0.0"    # weapon head -> arm1_base
-      - "150-152:10:10:1:0.5"  # assembly light/success event -> camera_link
+      - "150-159:10:10:1:0.5"  # lightbar colors + assembly_success event -> camera_link
       - "200:3:3:2:0.0"        # QR -> robot_base
 
     # Fixed extrinsics. Each list is [x, y, z, roll, pitch, yaw] in meters/radians.

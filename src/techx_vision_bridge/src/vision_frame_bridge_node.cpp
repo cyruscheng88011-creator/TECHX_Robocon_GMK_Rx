@@ -275,7 +275,7 @@ std::vector<ClassRule> default_rules() {
   return {
       make_rule(0, 5, ZONE_KFS, TYPE_KFS, FRAME_ARM2_BASE, 0.0f),
       make_rule(100, 102, ZONE_HEAD, TYPE_HEAD, FRAME_ARM1_BASE, 0.0f),
-      make_rule(150, 152, ZONE_EVENT, TYPE_EVENT, FRAME_CAMERA_LINK, 0.5f),
+      make_rule(150, 159, ZONE_EVENT, TYPE_EVENT, FRAME_CAMERA_LINK, 0.5f),
       make_rule(200, 200, ZONE_QR, TYPE_QR, FRAME_ROBOT_BASE, 0.0f),
   };
 }
@@ -356,7 +356,7 @@ class VisionFrameBridgeNode : public rclcpp::Node {
     declare_parameter("qos_depth", 5);
     declare_parameter("image_width", 640.0);
     declare_parameter("image_height", 480.0);
-    declare_parameter<std::vector<std::string>>("class_rules", {"0-5:2:2:4:0.0", "100-102:1:1:3:0.0", "150-152:10:10:1:0.5", "200:3:3:2:0.0"});
+    declare_parameter<std::vector<std::string>>("class_rules", {"0-5:2:2:4:0.0", "100-102:1:1:3:0.0", "150-159:10:10:1:0.5", "200:3:3:2:0.0"});
     declare_parameter("enable_transforms", true);
     declare_parameter<std::vector<double>>("T_robot_camera_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     declare_parameter<std::vector<double>>("T_arm1_robot_xyz_rpy", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});

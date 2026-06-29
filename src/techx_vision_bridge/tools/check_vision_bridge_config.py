@@ -19,9 +19,10 @@ REQUIRED_CLASS_IDS = {
     100: "weapon_head_fist",
     101: "weapon_head_palm",
     102: "weapon_head_spear",
-    150: "r1_assembly_light_red",
-    151: "r1_assembly_light_blue",
+    150: "assembly_light_orange",
+    151: "assembly_light_red",
     152: "assembly_success",
+    153: "assembly_light_blue",
     200: "qr_code",
 }
 
