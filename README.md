@@ -37,26 +37,47 @@ arm2_base  ：机械臂2坐标，KFS 抓取使用。
 默认 class 规则：
 
 ```text
-0-5     KFS      -> arm2_base
-100-102 武器头   -> arm1_base
-150-152 灯带事件 -> camera_link
-200     二维码   -> robot_base
+0-5     KFS              -> arm2_base
+100-102 武器头           -> arm1_base
+150-159 灯带颜色/拼接事件 -> camera_link（颜色可配置；152=assembly_success）
+200     二维码           -> robot_base
 ```
 
 ## 启动
 
+**一次性：持久静态 IP（重启不丢，NM 不抢）**
 ```bash
-git checkout fix/field-calibration-safety
-TECHX_NET_IFACE=eth0 bash scripts/field_start_gmk.sh
+sudo bash scripts/setup_field_network.sh gmk   # 建持久 NetworkManager 连接 = 192.168.10.100
 ```
 
-脚本会配置 GMK IP、检查 ROS2/colcon、构建 `techx_vision_bridge`、ping Jetson，并启动：
+**首次（必须先 colcon build 一次）**
+```bash
+cd <GMK仓库根目录>                       # 含 src/ 的那一层 = colcon 工作区根
+source /opt/ros/humble/setup.bash         # 或 foxy
+colcon build --packages-select techx_vision_bridge
+source install/setup.bash
+ros2 launch techx_vision_bridge vision_bridge.launch.py
+```
+
+**之后再启动**（每个新终端都要先 source 两次）
+```bash
+source /opt/ros/humble/setup.bash && source install/setup.bash
+ros2 launch techx_vision_bridge vision_bridge.launch.py
+```
+
+**或一条命令**（配网 + 编译 + launch 一条龙，会 sudo 配网）
+```bash
+bash scripts/field_start_gmk.sh
+```
+
+启动会拉起三个节点（看到 `vision bridge ready`、Jetson 上线后 `first UDP frame received`）：
 
 ```text
-/vision_bridge_node
-/calibration_guard_node
-/selection_debug_node
+/vision_bridge_node        # 收 UDP + 坐标变换
+/calibration_guard_node    # 标定安全闸
+/selection_debug_node      # 调试 CSV
 ```
+GMK 不做开机自启（按需手动起即可）。编译报错多为缺 ROS2 dev 包 → 装 `ros-<distro>-desktop` 或 `rosdep install --from-paths src -y`。
 
 ## 话题
 
