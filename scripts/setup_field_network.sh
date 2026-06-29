@@ -106,12 +106,29 @@ echo "[TECHX] GMK IP    : ${GMK_IP}/${CIDR}"
 echo "[TECHX] Jetson IP : ${JETSON_IP}"
 echo "[TECHX] UDP port  : ${PORT}"
 
-ip link set dev "${IFACE}" up
-ip addr flush dev "${IFACE}"
-ip addr add "${GMK_IP}/${CIDR}" dev "${IFACE}"
-
-# Route is explicit for direct Jetson<->GMK link; no gateway is required.
-ip route replace "192.168.10.0/24" dev "${IFACE}" src "${GMK_IP}"
+CON_NAME="techx-field"
+# Prefer a PERSISTENT NetworkManager profile (Ubuntu desktop uses NM by default).
+# This survives reboots and NM will not steal the IP back to DHCP. Set it once and
+# you can just power on and run. Falls back to a transient ip-addr config only when
+# NetworkManager is unavailable (lost on reboot).
+if command -v nmcli >/dev/null 2>&1 && nmcli general status >/dev/null 2>&1; then
+  echo "[TECHX] Using NetworkManager profile '${CON_NAME}' (persistent across reboots)."
+  if nmcli -t -f NAME con show 2>/dev/null | grep -qx "${CON_NAME}"; then
+    nmcli con delete "${CON_NAME}" >/dev/null 2>&1 || true
+  fi
+  nmcli con add type ethernet con-name "${CON_NAME}" ifname "${IFACE}" \
+        ipv4.method manual ipv4.addresses "${GMK_IP}/${CIDR}" ipv6.method ignore \
+        connection.autoconnect yes connection.autoconnect-priority 999 >/dev/null
+  nmcli con up "${CON_NAME}" >/dev/null
+  echo "[TECHX] Persistent IP set. It will auto-apply on every boot; re-running this is safe."
+else
+  echo "[TECHX] NetworkManager not available; using TRANSIENT ip-addr config (lost on reboot)." >&2
+  ip link set dev "${IFACE}" up
+  ip addr flush dev "${IFACE}"
+  ip addr add "${GMK_IP}/${CIDR}" dev "${IFACE}"
+  # Route is explicit for the direct Jetson<->GMK link; no gateway is required.
+  ip route replace "192.168.10.0/24" dev "${IFACE}" src "${GMK_IP}"
+fi
 
 ip -br addr show "${IFACE}"
 
